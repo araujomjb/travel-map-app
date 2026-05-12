@@ -13,8 +13,8 @@ const Map = ({ countries, selectedCountry, onCountryClick }) => {
     <div className="w-full h-full bg-slate-50 rounded-xl overflow-hidden shadow-inner relative">
       <ComposableMap
         projectionConfig={{
-          scale: 140,
-          center: [0, 20]
+          scale: 1200,
+          center: [-8, 39.5]
         }}
         className="w-full h-full"
       >
