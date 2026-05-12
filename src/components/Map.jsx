@@ -1,24 +1,48 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   ComposableMap,
   Geographies,
   Geography,
   ZoomableGroup
 } from "react-simple-maps";
+import { Plus, Minus, Maximize } from "lucide-react";
 import { CATEGORY_COLORS, CATEGORIES } from "../hooks/useCountryState";
 import worldData from "../data/world-110m.json";
 
 const Map = ({ countries, selectedCountry, onCountryClick }) => {
+  const [position, setPosition] = useState({ coordinates: [-8, 39.5], zoom: 8 });
+
+  function handleZoomIn() {
+    if (position.zoom >= 20) return;
+    setPosition((pos) => ({ ...pos, zoom: pos.zoom * 1.5 }));
+  }
+
+  function handleZoomOut() {
+    if (position.zoom <= 1) return;
+    setPosition((pos) => ({ ...pos, zoom: pos.zoom / 1.5 }));
+  }
+
+  function handleReset() {
+    setPosition({ coordinates: [0, 20], zoom: 1 });
+  }
+
+  function handleMoveEnd(position) {
+    setPosition(position);
+  }
+
   return (
     <div className="w-full h-full bg-slate-50 rounded-xl overflow-hidden shadow-inner relative">
       <ComposableMap
         projectionConfig={{
-          scale: 1200,
-          center: [-8, 39.5]
+          scale: 140,
         }}
         className="w-full h-full"
       >
-        <ZoomableGroup>
+        <ZoomableGroup
+          zoom={position.zoom}
+          center={position.coordinates}
+          onMoveEnd={handleMoveEnd}
+        >
           <Geographies geography={worldData}>
             {({ geographies }) =>
               geographies.map((geo) => {
@@ -39,8 +63,8 @@ const Map = ({ countries, selectedCountry, onCountryClick }) => {
                         fill: isSelected ? "#334155" : CATEGORY_COLORS[category],
                         outline: "none",
                         stroke: "#ffffff",
-                        strokeWidth: 0.5,
-                        transition: "all 250ms"
+                        strokeWidth: 0.5 / position.zoom,
+                        transition: "fill 250ms"
                       },
                       hover: {
                         fill: "#94a3b8",
@@ -59,6 +83,33 @@ const Map = ({ countries, selectedCountry, onCountryClick }) => {
           </Geographies>
         </ZoomableGroup>
       </ComposableMap>
+
+      {/* Zoom Controls */}
+      <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+        <button
+          onClick={handleZoomIn}
+          className="p-2 bg-white rounded-lg shadow-md hover:bg-slate-50 text-slate-600 transition-colors border border-slate-100"
+          title="Zoom In"
+        >
+          <Plus className="h-5 w-5" />
+        </button>
+        <button
+          onClick={handleZoomOut}
+          className="p-2 bg-white rounded-lg shadow-md hover:bg-slate-50 text-slate-600 transition-colors border border-slate-100"
+          title="Zoom Out"
+        >
+          <Minus className="h-5 w-5" />
+        </button>
+        <button
+          onClick={handleReset}
+          className="p-2 bg-white rounded-lg shadow-md hover:bg-slate-50 text-slate-600 transition-colors border border-slate-100"
+          title="Reset View"
+        >
+          <Maximize className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* Legend */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-sm text-xs border border-slate-100">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-green-400"></div>
