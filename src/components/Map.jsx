@@ -7,7 +7,7 @@ import {
 } from "react-simple-maps";
 import { Plus, Minus, Maximize } from "lucide-react";
 import { CATEGORY_COLORS, CATEGORIES } from "../hooks/useCountryState";
-import worldData from "../data/world-110m.json";
+import worldData from "../data/world-50m.json";
 
 const Map = ({ countries, selectedCountry, onCountryClick }) => {
   const [position, setPosition] = useState({ coordinates: [-8, 39.5], zoom: 8 });

@@ -3,7 +3,7 @@ import { Search, MapPin, CheckCircle, Heart, XCircle, Landmark, Beer, Dog, Users
 import { CATEGORIES } from '../hooks/useCountryState';
 import { fetchCountryData } from '../data/countryFacts';
 import { auth } from '../lib/firebase';
-import worldData from "../data/world-110m.json";
+import worldData from "../data/world-50m.json";
 import { feature } from "topojson-client";
 
 const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts, user }) => {
