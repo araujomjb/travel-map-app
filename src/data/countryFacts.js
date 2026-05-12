@@ -1,8 +1,9 @@
+import { db } from '../lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+
 const BASE_URL = 'https://restcountries.com/v3.1';
 
-// Expanded list of typical drinks and wild animals
 const extraFacts = {
-  // EUROPE
   "PRT": { drink: "Port Wine / Ginjinha", animals: "Iberian Lynx, Wolf" },
   "ESP": { drink: "Sangria / Sherry", animals: "Iberian Lynx, Brown Bear" },
   "FRA": { drink: "Wine / Champagne", animals: "Alpine Ibex, Chamois" },
@@ -27,8 +28,6 @@ const extraFacts = {
   "ROU": { drink: "Țuică", animals: "Brown Bear, Carpathian Lynx" },
   "HRV": { drink: "Rakija / Pelinkovac", animals: "Brown Bear, Gray Wolf" },
   "TUR": { drink: "Rakı / Ayran", animals: "Anatolian Leopard, Caretta Caretta" },
-
-  // AMERICAS
   "USA": { drink: "Bourbon / Craft Beer", animals: "Bald Eagle, Grizzly Bear, Bison" },
   "CAN": { drink: "Ice Wine / Caesar", animals: "Moose, Polar Bear, Beaver" },
   "MEX": { drink: "Tequila / Mezcal", animals: "Jaguar, Axolotl, Golden Eagle" },
@@ -39,8 +38,6 @@ const extraFacts = {
   "PER": { drink: "Pisco Sour", animals: "Llama, Alpaca, Andean Condor" },
   "CUB": { drink: "Rum (Mojito / Daiquiri)", animals: "Cuban Crocodile, Bee Hummingbird" },
   "JAM": { drink: "Rum", animals: "Doctor Bird, Jamaican Boa" },
-
-  // ASIA & PACIFIC
   "JPN": { drink: "Sake / Shochu", animals: "Snow Monkey, Tanuki, Sika Deer" },
   "CHN": { drink: "Baijiu / Tsingtao Beer", animals: "Giant Panda, Red Panda" },
   "KOR": { drink: "Soju / Makgeolli", animals: "Korean Tiger (in lore), Red-crowned Crane" },
@@ -51,8 +48,6 @@ const extraFacts = {
   "PHL": { drink: "Lambanog / San Miguel", animals: "Philippine Eagle, Tarsier" },
   "AUS": { drink: "Shiraz / Bundaberg Rum", animals: "Kangaroo, Koala, Platypus" },
   "NZL": { drink: "Sauvignon Blanc / L&P", animals: "Kiwi Bird, Tuatara" },
-
-  // AFRICA & MIDDLE EAST
   "ZAF": { drink: "Amarula / Pinotage", animals: "Lion, Elephant, Rhinoceros" },
   "EGY": { drink: "Karkade / Arak", animals: "Nile Crocodile, Dorcas Gazelle" },
   "MAR": { drink: "Mint Tea", animals: "Barbary Macaque, Fennec Fox" },
@@ -76,7 +71,15 @@ export const fetchCountryData = async (id, name) => {
 
     const data = await response.json();
     const country = data[0];
-    const cca3 = country.cca3; // Get the 3-letter ISO code from API result
+    const cca3 = country.cca3;
+
+    // Fetch popularity from Firestore
+    const globalRef = doc(db, 'global', 'stats');
+    const globalSnap = await getDoc(globalRef);
+    let popularity = 0;
+    if (globalSnap.exists()) {
+      popularity = globalSnap.data().popularity?.[id] || globalSnap.data().popularity?.[cca3] || 0;
+    }
 
     return {
       capital: country.capitals ? country.capitals[0] : (country.capital ? country.capital[0] : "N/A"),
@@ -84,7 +87,8 @@ export const fetchCountryData = async (id, name) => {
       animals: extraFacts[cca3]?.animals || "Local Wildlife",
       flag: country.flags.svg,
       population: country.population.toLocaleString(),
-      region: country.subregion || country.region
+      region: country.subregion || country.region,
+      popularity: popularity
     };
   } catch (error) {
     console.error("Error fetching country data:", error);
@@ -94,7 +98,8 @@ export const fetchCountryData = async (id, name) => {
       animals: "Local Wildlife",
       flag: null,
       population: "Unknown",
-      region: "Global"
+      region: "Global",
+      popularity: 0
     };
   }
 };

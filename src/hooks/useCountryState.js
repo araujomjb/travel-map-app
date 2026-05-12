@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { doc, onSnapshot, setDoc, deleteField, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, deleteField, updateDoc, increment } from 'firebase/firestore';
 
 export const CATEGORIES = {
   VISITED: 'visited',
@@ -48,6 +48,8 @@ export function useCountryState(userId) {
     if (!userId) return;
 
     const docRef = doc(db, 'users', userId);
+    const globalRef = doc(db, 'global', 'stats');
+    const oldCategory = countries[countryId] || CATEGORIES.NONE;
     
     try {
       // Optimistic update
@@ -61,7 +63,7 @@ export function useCountryState(userId) {
         return next;
       });
 
-      // Update Firestore
+      // Update User Firestore
       if (category === CATEGORIES.NONE) {
         await updateDoc(docRef, {
           [`countries.${countryId}`]: deleteField()
@@ -73,9 +75,19 @@ export function useCountryState(userId) {
           }
         }, { merge: true });
       }
+
+      // Update Global Popularity Counter
+      if (oldCategory === CATEGORIES.WANT_TO_VISIT && category !== CATEGORIES.WANT_TO_VISIT) {
+        await setDoc(globalRef, {
+          [`popularity.${countryId}`]: increment(-1)
+        }, { merge: true });
+      } else if (oldCategory !== CATEGORIES.WANT_TO_VISIT && category === CATEGORIES.WANT_TO_VISIT) {
+        await setDoc(globalRef, {
+          [`popularity.${countryId}`]: increment(1)
+        }, { merge: true });
+      }
     } catch (error) {
       console.error("Error updating Firestore:", error);
-      // Revert on error if necessary (simple reload will also fix it)
     }
   };
 
