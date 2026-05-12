@@ -5,9 +5,10 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  signInAnonymously
 } from 'firebase/auth';
-import { MapPin, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { MapPin, Mail, Lock, User, ArrowRight, UserCircle } from 'lucide-react';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -23,6 +24,19 @@ const Auth = () => {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
+    } catch (err) {
+      console.error(err);
+      setError(err.message.replace('Firebase: ', ''));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestSignIn = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await signInAnonymously(auth);
     } catch (err) {
       console.error(err);
       setError(err.message.replace('Firebase: ', ''));
@@ -125,14 +139,25 @@ const Auth = () => {
             <div className="absolute bg-white px-4 text-xs text-slate-400 font-medium">OR</div>
           </div>
 
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-sm"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google logo" />
-            Continue with Google
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-sm"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google logo" />
+              Continue with Google
+            </button>
+
+            <button
+              onClick={handleGuestSignIn}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-slate-50 border border-slate-100 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-all"
+            >
+              <UserCircle className="w-5 h-5 text-slate-400" />
+              Continue as Guest
+            </button>
+          </div>
         </div>
 
         <div className="mt-8 text-center">
