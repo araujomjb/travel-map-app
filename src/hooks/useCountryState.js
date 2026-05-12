@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-
-const STORAGE_KEY = 'travel_map_data';
+import { db } from '../lib/firebase';
+import { doc, onSnapshot, setDoc, deleteField, updateDoc } from 'firebase/firestore';
 
 export const CATEGORIES = {
   VISITED: 'visited',
@@ -14,38 +14,69 @@ export const CATEGORY_COLORS = {
   [CATEGORIES.NONE]: '#e5e7eb' // gray-200
 };
 
-export function useCountryState() {
-  const [countries, setCountries] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : {};
-  });
+export function useCountryState(userId) {
+  const [countries, setCountries] = useState({});
+  const [loading, setLoading] = useState(true);
 
+  // Sync with Firestore
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(countries));
-  }, [countries]);
+    if (!userId) {
+      setCountries({});
+      setLoading(false);
+      return;
+    }
 
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === STORAGE_KEY) {
-        setCountries(e.newValue ? JSON.parse(e.newValue) : {});
+    const docRef = doc(db, 'users', userId);
+    
+    // Subscribe to changes
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setCountries(docSnap.data().countries || {});
+      } else {
+        setCountries({});
       }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  const setCategory = (countryId, category) => {
-    setCountries(prev => {
-      if (category === CATEGORIES.NONE) {
-        const next = { ...prev };
-        delete next[countryId];
-        return next;
-      }
-      return {
-        ...prev,
-        [countryId]: category
-      };
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching Firestore data:", error);
+      setLoading(false);
     });
+
+    return () => unsubscribe();
+  }, [userId]);
+
+  const setCategory = async (countryId, category) => {
+    if (!userId) return;
+
+    const docRef = doc(db, 'users', userId);
+    
+    try {
+      // Optimistic update
+      setCountries(prev => {
+        const next = { ...prev };
+        if (category === CATEGORIES.NONE) {
+          delete next[countryId];
+        } else {
+          next[countryId] = category;
+        }
+        return next;
+      });
+
+      // Update Firestore
+      if (category === CATEGORIES.NONE) {
+        await updateDoc(docRef, {
+          [`countries.${countryId}`]: deleteField()
+        });
+      } else {
+        await setDoc(docRef, {
+          countries: {
+            [countryId]: category
+          }
+        }, { merge: true });
+      }
+    } catch (error) {
+      console.error("Error updating Firestore:", error);
+      // Revert on error if necessary (simple reload will also fix it)
+    }
   };
 
   const counts = {
@@ -53,5 +84,5 @@ export function useCountryState() {
     [CATEGORIES.WANT_TO_VISIT]: Object.values(countries).filter(c => c === CATEGORIES.WANT_TO_VISIT).length
   };
 
-  return { countries, setCategory, counts };
+  return { countries, setCategory, counts, loading };
 }

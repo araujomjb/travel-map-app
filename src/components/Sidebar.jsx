@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, MapPin, CheckCircle, Heart, XCircle, Landmark, Beer, Dog, Users, Globe } from 'lucide-react';
+import { Search, MapPin, CheckCircle, Heart, XCircle, Landmark, Beer, Dog, Users, Globe, LogOut, User as UserIcon } from 'lucide-react';
 import { CATEGORIES } from '../hooks/useCountryState';
 import { fetchCountryData } from '../data/countryFacts';
+import { auth } from '../lib/firebase';
 import worldData from "../data/world-110m.json";
 import { feature } from "topojson-client";
 
-const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts }) => {
+const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts, user }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [facts, setFacts] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -37,11 +38,34 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
     }
   }, [selectedCountry]);
 
+  const handleSignOut = () => {
+    auth.signOut();
+  };
+
   return (
     <div className="w-full md:w-80 h-[40vh] md:h-full bg-white border-t md:border-t-0 md:border-r border-slate-200 flex flex-col p-6 shadow-sm overflow-y-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800 mb-1">Traveler</h1>
-        <p className="text-slate-500 text-sm">Your personal world map</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 mb-0.5 tracking-tight">Traveler</h1>
+          <p className="text-slate-400 text-[11px] font-medium uppercase tracking-widest">Global Atlas</p>
+        </div>
+        <button 
+          onClick={handleSignOut}
+          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+          title="Sign Out"
+        >
+          <LogOut className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="mb-6 p-3 bg-slate-900 rounded-2xl flex items-center gap-3 shadow-md border border-slate-800">
+        <div className="p-2 bg-slate-800 rounded-xl text-white">
+          <UserIcon className="h-4 w-4" />
+        </div>
+        <div className="overflow-hidden">
+          <div className="text-white text-xs font-bold truncate">{user?.displayName || 'Traveler'}</div>
+          <div className="text-slate-400 text-[10px] truncate">{user?.email}</div>
+        </div>
       </div>
 
       <div className="flex gap-4 mb-6">
