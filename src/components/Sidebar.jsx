@@ -23,7 +23,7 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
   const currentCategory = selectedCountry ? countries[selectedCountry.id] : null;
 
   return (
-    <div className="w-80 h-full bg-white border-r border-slate-200 flex flex-col p-6 shadow-sm overflow-y-auto">
+    <div className="w-full md:w-80 h-[40vh] md:h-full bg-white border-t md:border-t-0 md:border-r border-slate-200 flex flex-col p-6 shadow-sm overflow-y-auto">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-800 mb-1">Traveler</h1>
         <p className="text-slate-500 text-sm">Your personal world map</p>

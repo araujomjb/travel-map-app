@@ -12,7 +12,7 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
+    <div className="flex flex-col-reverse md:flex-row h-screen w-screen overflow-hidden bg-slate-50">
       <Sidebar 
         selectedCountry={selectedCountry}
         onCountryClick={handleCountryClick}
@@ -20,7 +20,7 @@ function App() {
         countries={countries}
         counts={counts}
       />
-      <main className="flex-1 p-6 flex items-center justify-center">
+      <main className="flex-1 p-2 md:p-6 flex items-center justify-center">
         <Map 
           countries={countries}
           selectedCountry={selectedCountry}
