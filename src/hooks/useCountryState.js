@@ -24,6 +24,16 @@ export function useCountryState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(countries));
   }, [countries]);
 
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === STORAGE_KEY) {
+        setCountries(e.newValue ? JSON.parse(e.newValue) : {});
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const setCategory = (countryId, category) => {
     setCountries(prev => {
       if (category === CATEGORIES.NONE) {
