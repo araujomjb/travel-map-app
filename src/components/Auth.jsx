@@ -3,7 +3,9 @@ import { auth } from '../lib/firebase';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
-  updateProfile 
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { MapPin, Mail, Lock, User, ArrowRight } from 'lucide-react';
 
@@ -14,6 +16,20 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setLoading(true);
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      console.error(err);
+      setError(err.message.replace('Firebase: ', ''));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -102,6 +118,22 @@ const Auth = () => {
             {!loading && <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />}
           </button>
         </form>
+
+        <div className="mt-6">
+          <div className="relative flex items-center justify-center mb-6">
+            <div className="border-t border-slate-100 w-full"></div>
+            <div className="absolute bg-white px-4 text-xs text-slate-400 font-medium">OR</div>
+          </div>
+
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-sm"
+          >
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google logo" />
+            Continue with Google
+          </button>
+        </div>
 
         <div className="mt-8 text-center">
           <button
