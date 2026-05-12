@@ -1,12 +1,14 @@
-import React, { useState, useMemo } from 'react';
-import { Search, MapPin, CheckCircle, Heart, XCircle, Landmark, Beer, Dog } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, MapPin, CheckCircle, Heart, XCircle, Landmark, Beer, Dog, Users, Globe } from 'lucide-react';
 import { CATEGORIES } from '../hooks/useCountryState';
-import { getCountryFacts } from '../data/countryFacts';
+import { fetchCountryData } from '../data/countryFacts';
 import worldData from "../data/world-110m.json";
 import { feature } from "topojson-client";
 
 const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [facts, setFacts] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Extract all country names from the TopoJSON for searching
   const allCountries = useMemo(() => {
@@ -22,7 +24,18 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
     : [];
 
   const currentCategory = selectedCountry ? countries[selectedCountry.id] : null;
-  const facts = selectedCountry ? getCountryFacts(selectedCountry.id, selectedCountry.name) : null;
+
+  useEffect(() => {
+    if (selectedCountry) {
+      setLoading(true);
+      fetchCountryData(selectedCountry.id, selectedCountry.name).then(data => {
+        setFacts(data);
+        setLoading(false);
+      });
+    } else {
+      setFacts(null);
+    }
+  }, [selectedCountry]);
 
   return (
     <div className="w-full md:w-80 h-[40vh] md:h-full bg-white border-t md:border-t-0 md:border-r border-slate-200 flex flex-col p-6 shadow-sm overflow-y-auto">
@@ -75,12 +88,17 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
       <div>
         {selectedCountry ? (
           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="flex items-center gap-2 mb-4">
-              <MapPin className="h-4 w-4 text-slate-400" />
-              <h2 className="text-lg font-bold text-slate-800">{selectedCountry.name}</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-slate-400" />
+                <h2 className="text-lg font-bold text-slate-800">{selectedCountry.name}</h2>
+              </div>
+              {facts?.flag && (
+                <img src={facts.flag} alt={`${selectedCountry.name} flag`} className="h-4 w-6 rounded-sm shadow-sm object-cover" />
+              )}
             </div>
 
-            {/* Category Buttons - Now at the top of the card */}
+            {/* Category Buttons */}
             <div className="grid grid-cols-2 gap-2 mb-6">
               <button
                 onClick={() => setCategory(selectedCountry.id, CATEGORIES.VISITED)}
@@ -107,39 +125,66 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
             </div>
 
             {/* Fun Facts Section */}
-            <div className="space-y-4 pt-4 border-t border-slate-200/60">
-              <div className="flex gap-3">
-                <div className="mt-1 p-1.5 bg-amber-50 rounded-lg text-amber-600">
-                  <Landmark className="h-3.5 w-3.5" />
+            {loading ? (
+              <div className="space-y-4 py-10 animate-pulse flex flex-col items-center justify-center">
+                <div className="h-4 w-32 bg-slate-200 rounded"></div>
+                <div className="h-4 w-24 bg-slate-200 rounded"></div>
+              </div>
+            ) : facts && (
+              <div className="space-y-4 pt-4 border-t border-slate-200/60">
+                <div className="flex gap-3">
+                  <div className="mt-1 p-1.5 bg-amber-50 rounded-lg text-amber-600">
+                    <Landmark className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Capital</div>
+                    <div className="text-sm font-semibold text-slate-700">{facts.capital}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Capital</div>
-                  <div className="text-sm font-semibold text-slate-700">{facts.capital}</div>
+
+                <div className="flex gap-3">
+                  <div className="mt-1 p-1.5 bg-blue-50 rounded-lg text-blue-600">
+                    <Globe className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Region</div>
+                    <div className="text-sm font-semibold text-slate-700">{facts.region}</div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="mt-1 p-1.5 bg-slate-100 rounded-lg text-slate-600">
+                    <Users className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Population</div>
+                    <div className="text-sm font-semibold text-slate-700">{facts.population}</div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="mt-1 p-1.5 bg-purple-50 rounded-lg text-purple-600">
+                    <Beer className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Typical Drink</div>
+                    <div className="text-sm font-semibold text-slate-700">{facts.drink}</div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="mt-1 p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
+                    <Dog className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Wild Animals</div>
+                    <div className="text-sm font-semibold text-slate-700">{facts.animals}</div>
+                  </div>
                 </div>
               </div>
+            )}
 
-              <div className="flex gap-3">
-                <div className="mt-1 p-1.5 bg-purple-50 rounded-lg text-purple-600">
-                  <Beer className="h-3.5 w-3.5" />
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Typical Drink</div>
-                  <div className="text-sm font-semibold text-slate-700">{facts.drink}</div>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="mt-1 p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
-                  <Dog className="h-3.5 w-3.5" />
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Wild Animals</div>
-                  <div className="text-sm font-semibold text-slate-700">{facts.animals}</div>
-                </div>
-              </div>
-            </div>
-
-            {currentCategory && (
+            {currentCategory && !loading && (
               <button
                 onClick={() => setCategory(selectedCountry.id, CATEGORIES.NONE)}
                 className="w-full mt-6 text-[10px] font-bold text-slate-400 hover:text-red-400 transition-colors uppercase tracking-tight flex items-center justify-center gap-1"
@@ -151,7 +196,7 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
           </div>
         ) : (
           <div className="text-center py-8 px-4 border-2 border-dashed border-slate-100 rounded-2xl">
-            <p className="text-slate-400 text-sm">Select a country on the map to see fun facts!</p>
+            <p className="text-slate-400 text-sm">Select a country on the map to see real-time data!</p>
           </div>
         )}
       </div>
