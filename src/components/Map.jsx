@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   ComposableMap,
   Geographies,
@@ -6,14 +6,46 @@ import {
   ZoomableGroup
 } from "react-simple-maps";
 import { Plus, Minus, Maximize } from "lucide-react";
+import { geoCentroid } from "d3-geo";
+import { feature } from "topojson-client";
 import { CATEGORY_COLORS, CATEGORIES } from "../hooks/useCountryState";
 import worldData from "../data/world-50m.json";
 
 const Map = ({ countries, selectedCountry, onCountryClick }) => {
   const [position, setPosition] = useState({ coordinates: [-8, 39.5], zoom: 8 });
 
+  // Pre-parse the features for fast lookup
+  const worldFeatures = useMemo(() => {
+    return feature(worldData, worldData.objects.countries).features;
+  }, []);
+
+  // Auto-center when selectedCountry changes (especially from search)
+  useEffect(() => {
+    if (selectedCountry) {
+      const targetFeature = worldFeatures.find(f => {
+        const id = f.id || f.properties.ISO_A3 || f.properties.name;
+        return id === selectedCountry.id;
+      });
+
+      if (targetFeature) {
+        const centroid = geoCentroid(targetFeature);
+        
+        // Determine zoom level based on country size or specific small islands
+        // Very small islands need extreme zoom to be visible
+        const smallIslands = ['MDV', 'MLT', 'CPV', 'MUS', 'SYC', 'SGP', 'BRB', 'GRD', 'VCT', 'LCA', 'ATG', 'KNA', 'DMA'];
+        const isSmallIsland = smallIslands.includes(selectedCountry.id) || 
+                             (targetFeature.properties.ISO_A3 && smallIslands.includes(targetFeature.properties.ISO_A3));
+        
+        setPosition({
+          coordinates: centroid,
+          zoom: isSmallIsland ? 40 : 8
+        });
+      }
+    }
+  }, [selectedCountry, worldFeatures]);
+
   function handleZoomIn() {
-    if (position.zoom >= 20) return;
+    if (position.zoom >= 100) return;
     setPosition((pos) => ({ ...pos, zoom: pos.zoom * 1.5 }));
   }
 
