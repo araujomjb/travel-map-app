@@ -6,11 +6,10 @@ import { auth } from '../lib/firebase';
 import worldData from "../data/world-50m.json";
 import { feature } from "topojson-client";
 
-const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts, user, isOpen, onClose, itineraries, onOpenItinerary }) => {
+const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts, user, isOpen, onClose, itineraries, onOpenItinerary, activeTab, setActiveTab }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [facts, setFacts] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('map'); // 'map' or 'stats'
   const [activeTripTab, setActiveTripTab] = useState('overview');
 
   // Extract all country names from the TopoJSON for searching
@@ -96,17 +95,24 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
       <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
         <button 
           onClick={() => setActiveTab('map')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'map' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-50'}`}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all ${activeTab === 'map' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:bg-white/50'}`}
         >
           <MapIcon className="h-3.5 w-3.5" />
           Map
         </button>
         <button 
           onClick={() => setActiveTab('stats')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'stats' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all ${activeTab === 'stats' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:bg-white/50'}`}
         >
           <BarChart2 className="h-3.5 w-3.5" />
           Stats
+        </button>
+        <button 
+          onClick={() => setActiveTab('trips')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all ${activeTab === 'trips' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:bg-white/50'}`}
+        >
+          <Plane className="h-3.5 w-3.5" />
+          Trips
         </button>
       </div>
 

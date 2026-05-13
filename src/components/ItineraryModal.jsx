@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Save, Plane, MapPin, Train, Tag } from 'lucide-react';
+import { X, Plus, Trash2, Save, Plane, MapPin, Train, Tag, DollarSign } from 'lucide-react';
 
 const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) => {
   const [name, setName] = useState('');
   const [cities, setCities] = useState('');
   const [transportation, setTransportation] = useState('');
   const [flights, setFlights] = useState([]);
+  const [cost, setCost] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -13,6 +14,7 @@ const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) 
       setCities(existingData?.cities ? existingData.cities.join(', ') : '');
       setTransportation(existingData?.transportation || '');
       setFlights(existingData?.flights || []);
+      setCost(existingData?.cost || '');
     }
   }, [isOpen, existingData]);
 
@@ -46,7 +48,8 @@ const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) 
       name: name.trim() || 'My Trip',
       cities: cleanCities,
       transportation: transportation.trim(),
-      flights: cleanFlights
+      flights: cleanFlights,
+      cost: cost.trim()
     });
     onClose();
   };
@@ -72,20 +75,36 @@ const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) 
         <div className="overflow-y-auto p-6 flex-1">
           <form id="itinerary-form" onSubmit={handleSubmit} className="space-y-6">
             
-            {/* Trip Name Section */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Tag className="h-4 w-4 text-orange-500" />
-                Trip Name
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Sister Trip 2025"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
+            {/* Trip Name and Cost Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-orange-500" />
+                  Trip Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Sister Trip 2025"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-green-500" />
+                  Total Cost
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. $1200 or €800"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all"
+                  value={cost}
+                  onChange={(e) => setCost(e.target.value)}
+                />
+              </div>
             </div>
 
             <hr className="border-slate-100" />

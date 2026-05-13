@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Map from './components/Map';
 import Auth from './components/Auth';
+import TripsDashboard from './components/TripsDashboard';
 import { useCountryState } from './hooks/useCountryState';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -16,8 +17,9 @@ function App() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isItineraryModalOpen, setIsItineraryModalOpen] = useState(false);
   const [itineraryToEdit, setItineraryToEdit] = useState(null);
+  const [activeTab, setActiveTab] = useState('map'); // Lifted from Sidebar
   
-  const { countries, setCategory, counts, loading: dataLoading, itineraries, saveItinerary } = useCountryState(user?.uid);
+  const { countries, setCategory, counts, loading: dataLoading, itineraries, saveItinerary, deleteItinerary } = useCountryState(user?.uid);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -29,6 +31,7 @@ function App() {
 
   const handleCountryClick = (country) => {
     setSelectedCountry(country);
+    setActiveTab('map'); // Switch back to map if they were on trips dashboard
     // If selected via search/click on map, we might want to close sidebar on mobile to show the map
     if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
   };
@@ -68,19 +71,35 @@ function App() {
         onClose={() => setIsMobileSidebarOpen(false)}
         itineraries={itineraries}
         onOpenItinerary={openItineraryModal}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
       
-      <main className="flex-1 h-full w-full p-2 md:p-6 flex items-center justify-center relative z-0">
+      <main className="flex-1 h-full w-full p-2 md:p-6 flex items-center justify-center relative z-0 overflow-hidden">
         {dataLoading && (
           <div className="absolute inset-0 z-20 bg-white/40 backdrop-blur-[2px] flex items-center justify-center pointer-events-none transition-opacity duration-300">
              <div className="h-10 w-10 border-4 border-slate-100 border-t-slate-800 rounded-full animate-spin shadow-sm"></div>
           </div>
         )}
-        <Map 
-          countries={countries}
-          selectedCountry={selectedCountry}
-          onCountryClick={handleCountryClick}
-        />
+        
+        {activeTab === 'trips' ? (
+          <div className="w-full h-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+             <TripsDashboard 
+                itineraries={itineraries} 
+                onEdit={(countryId, tripData) => {
+                  setSelectedCountry({ id: countryId, name: tripData.countryName });
+                  openItineraryModal(tripData);
+                }} 
+                onDelete={deleteItinerary} 
+             />
+          </div>
+        ) : (
+          <Map 
+            countries={countries}
+            selectedCountry={selectedCountry}
+            onCountryClick={handleCountryClick}
+          />
+        )}
 
         {/* Mobile Quick Action Card */}
         {selectedCountry && !isMobileSidebarOpen && (

@@ -105,6 +105,41 @@ export function useCountryState(userId) {
     }
   };
 
+  const deleteItinerary = async (countryId, tripId) => {
+    if (!userId) return;
+    const docRef = doc(db, 'users', userId);
+
+    try {
+      setItineraries(prev => {
+        const currentArray = prev[countryId] || [];
+        const newArray = currentArray.filter(i => i.id !== tripId);
+        
+        let nextState = { ...prev, [countryId]: newArray };
+        if (newArray.length === 0) {
+          nextState = { ...prev };
+          delete nextState[countryId];
+        }
+
+        // Update Firestore based on the new array state
+        if (newArray.length === 0) {
+          updateDoc(docRef, {
+            [`itineraries.${countryId}`]: deleteField()
+          });
+        } else {
+          setDoc(docRef, {
+            itineraries: {
+              [countryId]: newArray
+            }
+          }, { merge: true });
+        }
+
+        return nextState;
+      });
+    } catch (error) {
+      console.error("Error deleting itinerary:", error);
+    }
+  };
+
   const setCategory = async (countryId, category) => {
     if (!userId) return;
 
@@ -157,5 +192,5 @@ export function useCountryState(userId) {
     [CATEGORIES.WANT_TO_VISIT]: Object.values(countries).filter(c => c === CATEGORIES.WANT_TO_VISIT).length
   };
 
-  return { countries, setCategory, counts, loading, itineraries, saveItinerary };
+  return { countries, setCategory, counts, loading, itineraries, saveItinerary, deleteItinerary };
 }
