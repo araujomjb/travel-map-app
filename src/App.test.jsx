@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import App from './App';
 
@@ -23,33 +23,68 @@ vi.mock('firebase/auth', () => ({
 vi.mock('./hooks/useCountryState', () => ({
   CATEGORIES: { VISITED: 'visited', WANT_TO_VISIT: 'wantToVisit', NONE: 'none' },
   useCountryState: () => ({
-    countries: {},
+    countries: { 'PRT': 'visited' },
     setCategory: vi.fn(),
-    counts: { visited: 0, wantToVisit: 0 },
+    counts: { visited: 1, wantToVisit: 0 },
     loading: false,
-    itineraries: {},
-    saveItinerary: vi.fn()
+    itineraries: { 'PRT': [{ id: '1', name: 'Portugal Trip' }] },
+    saveItinerary: vi.fn(),
+    deleteItinerary: vi.fn()
   })
 }));
 
 // Mock feature from topojson-client
 vi.mock('topojson-client', () => ({
-  feature: () => ({ features: [] })
+  feature: () => ({ features: [{ id: 'PRT', properties: { name: 'Portugal' } }] })
 }));
 
 // Mock Map to prevent rendering issues with d3/svg in tests
 vi.mock('./components/Map', () => ({
-  default: () => <div data-testid="mock-map">Map Component</div>
+  default: ({ onCountryClick }) => (
+    <div data-testid="mock-map">
+      <button data-testid="click-prt" onClick={() => onCountryClick({ id: 'PRT', name: 'Portugal' })}>
+        Click Portugal
+      </button>
+    </div>
+  )
 }));
 
-describe('App Component', () => {
-  it('renders the authenticated layout without crashing', () => {
+describe('App Component Happy Paths', () => {
+  it('renders the authenticated layout', () => {
+    render(<App />);
+    expect(screen.getByTestId('mock-map')).toBeInTheDocument();
+    expect(screen.getAllByText(/Search & Stats/i)[0]).toBeInTheDocument();
+  });
+
+  it('can switch between Map, Stats, and Trips tabs', () => {
     render(<App />);
     
-    // Check if the mock map renders
+    // Default should be map view
     expect(screen.getByTestId('mock-map')).toBeInTheDocument();
+
+    // Switch to Stats tab (first one is in the sidebar)
+    const statsTab = screen.getAllByRole('button', { name: /Stats/i })[0];
+    fireEvent.click(statsTab);
+    expect(screen.getByText(/Travel Rank/i)).toBeInTheDocument();
+
+    // Switch to Trips tab
+    const tripsTab = screen.getByRole('button', { name: /Trips/i });
+    fireEvent.click(tripsTab);
+    expect(screen.getByText('My Itineraries')).toBeInTheDocument();
+    expect(screen.queryByTestId('mock-map')).not.toBeInTheDocument();
+  });
+
+  it('can click a country on the map to view details', () => {
+    render(<App />);
     
-    // Check if the floating action button (which had the missing MapPin earlier) renders
-    expect(screen.getByText('Search & Stats')).toBeInTheDocument();
+    // Click Portugal on the mocked map
+    const prtButton = screen.getByTestId('click-prt');
+    fireEvent.click(prtButton);
+
+    // Sidebar should update to show Portugal details (it renders in both Sidebar and Mobile Card)
+    expect(screen.getAllByText('Portugal')[0]).toBeInTheDocument();
+    // Quick action buttons for Visited/Want should appear (renders in both Sidebar and Mobile Card)
+    expect(screen.getAllByText('Visited')[0]).toBeInTheDocument();
   });
 });
+

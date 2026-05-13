@@ -94,7 +94,7 @@ const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) 
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-green-500" />
+                  <Coins className="h-4 w-4 text-green-500" />
                   Total Cost
                 </label>
                 <input
