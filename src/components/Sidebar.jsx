@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, MapPin, CheckCircle, Heart, XCircle, Landmark, Beer, Dog, Users, Globe, LogOut, User as UserIcon, BarChart2, Map as MapIcon, Flame, TrendingUp, Trophy } from 'lucide-react';
+import { Search, MapPin, CheckCircle, Heart, XCircle, Landmark, Beer, Dog, Users, Globe, LogOut, User as UserIcon, BarChart2, Map as MapIcon, Flame, TrendingUp, Trophy, X } from 'lucide-react';
 import { CATEGORIES } from '../hooks/useCountryState';
 import { fetchCountryData } from '../data/countryFacts';
 import { auth } from '../lib/firebase';
 import worldData from "../data/world-50m.json";
 import { feature } from "topojson-client";
 
-const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts, user }) => {
+const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts, user, isOpen, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [facts, setFacts] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -29,7 +29,6 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
 
   useEffect(() => {
     if (selectedCountry) {
-      setActiveTab('map');
       setLoading(true);
       fetchCountryData(selectedCountry.id, selectedCountry.name).then(data => {
         setFacts(data);
@@ -42,8 +41,6 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
     auth.signOut();
   };
 
-  // Percentile calculation: Logarithmic curve to simulate global ranking
-  // 0 countries = 0th, 1 = 30th, 5 = 60th, 20 = 95th, 50 = 99th
   const calculatePercentile = (count) => {
     if (count === 0) return 0;
     const percentile = 100 * (1 - Math.exp(-0.15 * count));
@@ -53,19 +50,32 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
   const percentile = calculatePercentile(counts[CATEGORIES.VISITED]);
 
   return (
-    <div className="w-full md:w-80 h-[40vh] md:h-full bg-white border-t md:border-t-0 md:border-r border-slate-200 flex flex-col p-6 shadow-sm overflow-y-auto">
+    <div className={`
+      fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out bg-white p-6 flex flex-col overflow-y-auto
+      md:relative md:translate-x-0 md:w-80 md:h-full md:border-r md:border-slate-200 md:z-10 md:bg-white md:shadow-sm
+      ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+    `}>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 mb-0.5 tracking-tight">Traveler</h1>
+          <h1 className="text-2xl font-bold text-slate-800 mb-0.5 tracking-tight">Eu fui</h1>
           <p className="text-slate-400 text-[11px] font-medium uppercase tracking-widest">Global Atlas</p>
         </div>
-        <button 
-          onClick={handleSignOut}
-          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-          title="Sign Out"
-        >
-          <LogOut className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleSignOut}
+            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+            title="Sign Out"
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
+          {/* Close button for Mobile */}
+          <button 
+            onClick={onClose}
+            className="md:hidden p-2 text-slate-400 hover:text-slate-900 bg-slate-50 rounded-xl transition-all"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* User Profile */}
@@ -83,7 +93,7 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
       <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
         <button 
           onClick={() => setActiveTab('map')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'map' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'map' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-50'}`}
         >
           <MapIcon className="h-3.5 w-3.5" />
           Map
@@ -179,7 +189,7 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
                     className={`flex flex-col items-center justify-center gap-1 py-2 rounded-xl text-[11px] font-bold transition-all ${
                       currentCategory === CATEGORIES.WANT_TO_VISIT
                         ? 'bg-blue-500 text-white shadow-md'
-                        : 'bg-white text-slate-600 hover:bg-blue-50 border border-slate-100'
+                        : 'bg-white text-slate-600 hover:bg-green-50 border border-slate-100'
                     }`}
                   >
                     <Heart className="h-4 w-4" />
@@ -265,7 +275,7 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
           </div>
         </>
       ) : (
-        <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-6">
+        <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-6 pb-20 md:pb-0">
           <div className="bg-slate-900 p-6 rounded-3xl text-white shadow-xl relative overflow-hidden">
              <Trophy className="absolute -bottom-2 -right-2 h-20 w-20 text-white/10 rotate-12" />
              <div className="relative z-10">
