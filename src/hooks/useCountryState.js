@@ -16,12 +16,14 @@ export const CATEGORY_COLORS = {
 
 export function useCountryState(userId) {
   const [countries, setCountries] = useState({});
+  const [itineraries, setItineraries] = useState({});
   const [loading, setLoading] = useState(true);
 
   // Sync with Firestore
   useEffect(() => {
     if (!userId) {
       setCountries({});
+      setItineraries({});
       setLoading(false);
       return;
     }
@@ -31,9 +33,24 @@ export function useCountryState(userId) {
     // Subscribe to changes
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
-        setCountries(docSnap.data().countries || {});
+        const data = docSnap.data();
+        setCountries(data.countries || {});
+        
+        // Ensure itineraries is always a map of arrays
+        const rawItin = data.itineraries || {};
+        const normalizedItin = {};
+        for (const [cid, tripData] of Object.entries(rawItin)) {
+          if (Array.isArray(tripData)) {
+            normalizedItin[cid] = tripData;
+          } else if (typeof tripData === 'object' && tripData !== null) {
+            // Legacy single-object migration
+            normalizedItin[cid] = [{ id: 'legacy-1', name: 'My Trip', ...tripData }];
+          }
+        }
+        setItineraries(normalizedItin);
       } else {
         setCountries({});
+        setItineraries({});
       }
       setLoading(false);
     }, (error) => {
@@ -43,6 +60,50 @@ export function useCountryState(userId) {
 
     return () => unsubscribe();
   }, [userId]);
+
+  const saveItinerary = async (countryId, itineraryData) => {
+    if (!userId) return;
+    const docRef = doc(db, 'users', userId);
+    
+    // Ensure we have an ID for the itinerary
+    const newItinData = { 
+      ...itineraryData, 
+      id: itineraryData.id || Date.now().toString(36) + Math.random().toString(36).substring(2)
+    };
+    
+    try {
+      // Optimistic update
+      setItineraries(prev => {
+        const currentArray = prev[countryId] || [];
+        const index = currentArray.findIndex(i => i.id === newItinData.id);
+        const newArray = [...currentArray];
+        
+        if (index >= 0) {
+          newArray[index] = newItinData;
+        } else {
+          newArray.push(newItinData);
+        }
+        
+        return {
+          ...prev,
+          [countryId]: newArray
+        };
+      });
+
+      // Update Firestore (we read the latest from optimistic state)
+      setItineraries(prev => {
+        setDoc(docRef, {
+          itineraries: {
+            [countryId]: prev[countryId]
+          }
+        }, { merge: true });
+        return prev;
+      });
+      
+    } catch (error) {
+      console.error("Error saving itinerary:", error);
+    }
+  };
 
   const setCategory = async (countryId, category) => {
     if (!userId) return;
@@ -96,5 +157,5 @@ export function useCountryState(userId) {
     [CATEGORIES.WANT_TO_VISIT]: Object.values(countries).filter(c => c === CATEGORIES.WANT_TO_VISIT).length
   };
 
-  return { countries, setCategory, counts, loading };
+  return { countries, setCategory, counts, loading, itineraries, saveItinerary };
 }

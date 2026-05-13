@@ -5,16 +5,19 @@ import Auth from './components/Auth';
 import { useCountryState } from './hooks/useCountryState';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { Menu, Search, BarChart2, CheckCircle, Heart, X } from 'lucide-react';
+import { Menu, Search, BarChart2, CheckCircle, Heart, X, MapPin, Plane, FileText } from 'lucide-react';
 import { CATEGORIES } from './hooks/useCountryState';
+import ItineraryModal from './components/ItineraryModal';
 
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isItineraryModalOpen, setIsItineraryModalOpen] = useState(false);
+  const [itineraryToEdit, setItineraryToEdit] = useState(null);
   
-  const { countries, setCategory, counts, loading: dataLoading } = useCountryState(user?.uid);
+  const { countries, setCategory, counts, loading: dataLoading, itineraries, saveItinerary } = useCountryState(user?.uid);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -28,6 +31,11 @@ function App() {
     setSelectedCountry(country);
     // If selected via search/click on map, we might want to close sidebar on mobile to show the map
     if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
+  };
+
+  const openItineraryModal = (tripData = null) => {
+    setItineraryToEdit(tripData);
+    setIsItineraryModalOpen(true);
   };
 
   if (authLoading) {
@@ -58,6 +66,8 @@ function App() {
         user={user}
         isOpen={isMobileSidebarOpen}
         onClose={() => setIsMobileSidebarOpen(false)}
+        itineraries={itineraries}
+        onOpenItinerary={openItineraryModal}
       />
       
       <main className="flex-1 h-full w-full p-2 md:p-6 flex items-center justify-center relative z-0">
@@ -80,7 +90,7 @@ function App() {
                 <MapPin className="h-4 w-4 text-slate-400" />
                 <h3 className="font-bold text-slate-800 text-sm">{selectedCountry.name}</h3>
               </div>
-              <button onClick={() => setSelectedCountry(null)} className="p-1 text-slate-400">
+              <button onClick={() => setSelectedCountry(null)} className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -109,6 +119,16 @@ function App() {
                 Want
               </button>
             </div>
+
+            {/* Mobile Itinerary Button - Only visible if Visited */}
+            {currentCategory === CATEGORIES.VISITED && (
+              <button
+                onClick={() => openItineraryModal()}
+                className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all"
+              >
+                <Plane className="h-4 w-4" /> Add Trip
+              </button>
+            )}
           </div>
         )}
 
@@ -123,6 +143,18 @@ function App() {
           <BarChart2 className="h-4 w-4" />
         </button>
       </main>
+
+      <ItineraryModal 
+        isOpen={isItineraryModalOpen}
+        onClose={() => setIsItineraryModalOpen(false)}
+        countryName={selectedCountry?.name}
+        existingData={itineraryToEdit}
+        onSave={(data) => {
+          if (selectedCountry) {
+            saveItinerary(selectedCountry.id, data);
+          }
+        }}
+      />
     </div>
   );
 }

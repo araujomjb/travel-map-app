@@ -1,16 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, MapPin, CheckCircle, Heart, XCircle, Landmark, Beer, Dog, Users, Globe, LogOut, User as UserIcon, BarChart2, Map as MapIcon, Flame, TrendingUp, Trophy, X } from 'lucide-react';
+import { Search, MapPin, CheckCircle, Heart, XCircle, Landmark, Beer, Dog, Users, Globe, LogOut, User as UserIcon, BarChart2, Map as MapIcon, Flame, TrendingUp, Trophy, X, Plane, FileText, Plus, Train } from 'lucide-react';
 import { CATEGORIES } from '../hooks/useCountryState';
 import { fetchCountryData } from '../data/countryFacts';
 import { auth } from '../lib/firebase';
 import worldData from "../data/world-50m.json";
 import { feature } from "topojson-client";
 
-const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts, user, isOpen, onClose }) => {
+const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts, user, isOpen, onClose, itineraries, onOpenItinerary }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [facts, setFacts] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('map'); // 'map' or 'stats'
+  const [activeTripTab, setActiveTripTab] = useState('overview');
 
   // Extract all country names from the TopoJSON for searching
   const allCountries = useMemo(() => {
@@ -26,9 +27,11 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
     : [];
 
   const currentCategory = selectedCountry ? countries[selectedCountry.id] : null;
+  const currentItineraries = selectedCountry ? itineraries?.[selectedCountry.id] || [] : [];
 
   useEffect(() => {
     if (selectedCountry) {
+      setActiveTripTab('overview');
       setLoading(true);
       fetchCountryData(selectedCountry.id, selectedCountry.name).then(data => {
         setFacts(data);
@@ -197,63 +200,159 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
                   </button>
                 </div>
 
-                {/* Fun Facts Section */}
-                {loading ? (
-                  <div className="space-y-4 py-10 animate-pulse flex flex-col items-center justify-center">
-                    <div className="h-4 w-32 bg-slate-200 rounded"></div>
-                    <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                {/* Trip Tabs - Only visible if Visited */}
+                {currentCategory === CATEGORIES.VISITED && (
+                  <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                    <button
+                      onClick={() => setActiveTripTab('overview')}
+                      className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${activeTripTab === 'overview' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                    >
+                      Overview
+                    </button>
+                    {currentItineraries.map((trip) => (
+                      <button
+                        key={trip.id}
+                        onClick={() => setActiveTripTab(trip.id)}
+                        className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${activeTripTab === trip.id ? 'bg-emerald-500 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100'}`}
+                      >
+                        {trip.name}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => onOpenItinerary()}
+                      className="whitespace-nowrap flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-400 border border-dashed border-slate-300 hover:bg-slate-50 hover:text-slate-600 transition-all"
+                    >
+                      <Plus className="h-3 w-3" /> Add Trip
+                    </button>
                   </div>
-                ) : facts && (
-                  <div className="space-y-4 pt-4 border-t border-slate-200/60">
-                    <div className="flex gap-3">
-                      <div className="mt-1 p-1.5 bg-amber-50 rounded-lg text-amber-600">
-                        <Landmark className="h-3.5 w-3.5" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Capital</div>
-                        <div className="text-sm font-semibold text-slate-700">{facts.capital}</div>
-                      </div>
-                    </div>
+                )}
 
-                    <div className="flex gap-3">
-                      <div className="mt-1 p-1.5 bg-blue-50 rounded-lg text-blue-600">
-                        <Globe className="h-3.5 w-3.5" />
+                {/* Tab Content */}
+                {activeTripTab === 'overview' ? (
+                  <>
+                    {/* Fun Facts Section */}
+                    {loading ? (
+                      <div className="space-y-4 py-10 animate-pulse flex flex-col items-center justify-center">
+                        <div className="h-4 w-32 bg-slate-200 rounded"></div>
+                        <div className="h-4 w-24 bg-slate-200 rounded"></div>
                       </div>
-                      <div>
-                        <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Region</div>
-                        <div className="text-sm font-semibold text-slate-700">{facts.region}</div>
-                      </div>
-                    </div>
+                    ) : facts && (
+                      <div className="space-y-4 pt-4 border-t border-slate-200/60">
+                        <div className="flex gap-3">
+                          <div className="mt-1 p-1.5 bg-amber-50 rounded-lg text-amber-600">
+                            <Landmark className="h-3.5 w-3.5" />
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Capital</div>
+                            <div className="text-sm font-semibold text-slate-700">{facts.capital}</div>
+                          </div>
+                        </div>
 
-                    <div className="flex gap-3">
-                      <div className="mt-1 p-1.5 bg-slate-100 rounded-lg text-slate-600">
-                        <Users className="h-3.5 w-3.5" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Population</div>
-                        <div className="text-sm font-semibold text-slate-700">{facts.population}</div>
-                      </div>
-                    </div>
+                        <div className="flex gap-3">
+                          <div className="mt-1 p-1.5 bg-blue-50 rounded-lg text-blue-600">
+                            <Globe className="h-3.5 w-3.5" />
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Region</div>
+                            <div className="text-sm font-semibold text-slate-700">{facts.region}</div>
+                          </div>
+                        </div>
 
-                    <div className="flex gap-3">
-                      <div className="mt-1 p-1.5 bg-purple-50 rounded-lg text-purple-600">
-                        <Beer className="h-3.5 w-3.5" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Typical Drink</div>
-                        <div className="text-sm font-semibold text-slate-700">{facts.drink}</div>
-                      </div>
-                    </div>
+                        <div className="flex gap-3">
+                          <div className="mt-1 p-1.5 bg-slate-100 rounded-lg text-slate-600">
+                            <Users className="h-3.5 w-3.5" />
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Population</div>
+                            <div className="text-sm font-semibold text-slate-700">{facts.population}</div>
+                          </div>
+                        </div>
 
-                    <div className="flex gap-3">
-                      <div className="mt-1 p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
-                        <Dog className="h-3.5 w-3.5" />
+                        <div className="flex gap-3">
+                          <div className="mt-1 p-1.5 bg-purple-50 rounded-lg text-purple-600">
+                            <Beer className="h-3.5 w-3.5" />
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Typical Drink</div>
+                            <div className="text-sm font-semibold text-slate-700">{facts.drink}</div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <div className="mt-1 p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
+                            <Dog className="h-3.5 w-3.5" />
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Wild Animals</div>
+                            <div className="text-sm font-semibold text-slate-700">{facts.animals}</div>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Wild Animals</div>
-                        <div className="text-sm font-semibold text-slate-700">{facts.animals}</div>
-                      </div>
-                    </div>
+                    )}
+                  </>
+                ) : (
+                  // Trip Details View
+                  <div className="space-y-4 pt-4 border-t border-slate-200/60 animate-in fade-in duration-300">
+                    {(() => {
+                      const trip = currentItineraries.find(t => t.id === activeTripTab);
+                      if (!trip) return null;
+                      return (
+                        <>
+                          <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-bold text-slate-800 text-sm">{trip.name}</h4>
+                            <button
+                              onClick={() => onOpenItinerary(trip)}
+                              className="text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-md transition-colors flex items-center gap-1"
+                            >
+                              <FileText className="h-3 w-3" /> Edit
+                            </button>
+                          </div>
+
+                          {trip.cities && trip.cities.length > 0 && (
+                            <div>
+                              <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1 flex items-center gap-1">
+                                <MapPin className="h-3 w-3 text-emerald-500" /> Cities
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {trip.cities.map((city, i) => (
+                                  <span key={i} className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
+                                    {city}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {trip.flights && trip.flights.length > 0 && (
+                            <div>
+                              <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1 flex items-center gap-1">
+                                <Plane className="h-3 w-3 text-blue-500" /> Flights
+                              </div>
+                              <div className="space-y-2">
+                                {trip.flights.map((flight, i) => (
+                                  <div key={i} className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs">
+                                    <div className="font-bold text-slate-700">{flight.airline || 'Unknown Airline'}</div>
+                                    <div className="text-slate-500">{flight.route || 'No route specified'}</div>
+                                    {flight.layover && <div className="text-[10px] text-slate-400 mt-0.5">Layover: {flight.layover}</div>}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {trip.transportation && (
+                            <div>
+                              <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1 flex items-center gap-1">
+                                <Train className="h-3 w-3 text-purple-500" /> Notes & Transport
+                              </div>
+                              <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                {trip.transportation}
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
 
