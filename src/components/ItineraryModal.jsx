@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Save, Plane, MapPin, Train, Tag, DollarSign } from 'lucide-react';
+import { X, Plus, Trash2, Save, Plane, MapPin, Train, Tag, Coins } from 'lucide-react';
 
 const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) => {
   const [name, setName] = useState('');
