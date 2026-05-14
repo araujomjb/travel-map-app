@@ -36,6 +36,11 @@ function App() {
     if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
+  };
+
   const openItineraryModal = (tripData = null) => {
     setItineraryToEdit(tripData);
     setIsItineraryModalOpen(true);
@@ -72,7 +77,7 @@ function App() {
         itineraries={itineraries}
         onOpenItinerary={openItineraryModal}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
       />
       
       <main className="flex-1 h-full w-full p-2 md:p-6 flex items-center justify-center relative z-0 overflow-hidden">
