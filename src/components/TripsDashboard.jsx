@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { MapPin, Plane, Train, Edit, Trash2, Calendar, DollarSign } from 'lucide-react';
+import { MapPin, Plane, Train, Edit, Trash2, Calendar, Coins } from 'lucide-react';
 import { feature } from "topojson-client";
 import worldData from "../data/world-50m.json";
 
@@ -92,7 +92,7 @@ const TripsDashboard = ({ itineraries, onEdit, onDelete }) => {
                   </div>
                   {trip.cost && (
                     <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
-                      <DollarSign className="h-3.5 w-3.5" /> {trip.cost}
+                      <Coins className="h-3.5 w-3.5" /> {trip.cost}
                     </div>
                   )}
                 </div>
