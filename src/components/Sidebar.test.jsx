@@ -22,6 +22,14 @@ vi.mock('../data/countryFacts', () => ({
   fetchCountryData: (...args) => mockFetchData(...args)
 }));
 
+// Mock useCommunityData
+vi.mock('../hooks/useCommunityData', () => ({
+  useCommunityData: () => ({
+    trips: [],
+    loading: false
+  })
+}));
+
 // Mock worldData
 vi.mock('../data/world-50m.json', () => ({
   default: { objects: { countries: {} } }

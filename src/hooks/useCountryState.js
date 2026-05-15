@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { doc, onSnapshot, setDoc, deleteField, updateDoc, increment } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, deleteField, updateDoc, increment, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 export const CATEGORIES = {
   VISITED: 'visited',
@@ -14,7 +14,8 @@ export const CATEGORY_COLORS = {
   [CATEGORIES.NONE]: '#e5e7eb' // gray-200
 };
 
-export function useCountryState(userId) {
+export function useCountryState(user) {
+  const userId = user?.uid;
   const [countries, setCountries] = useState({});
   const [itineraries, setItineraries] = useState({});
   const [loading, setLoading] = useState(true);
@@ -61,18 +62,22 @@ export function useCountryState(userId) {
     return () => unsubscribe();
   }, [userId]);
 
-  const saveItinerary = async (countryId, itineraryData) => {
+  const saveItinerary = async (countryId, countryName, itineraryData) => {
     if (!userId) return;
     const docRef = doc(db, 'users', userId);
+    const publicRef = doc(db, 'public_itineraries', itineraryData.id || Date.now().toString(36));
     
     // Ensure we have an ID for the itinerary
+    const tripId = itineraryData.id || publicRef.id;
+    const finalPublicRef = doc(db, 'public_itineraries', tripId);
+
     const newItinData = { 
       ...itineraryData, 
-      id: itineraryData.id || Date.now().toString(36) + Math.random().toString(36).substring(2)
+      id: tripId
     };
     
     try {
-      // Optimistic update
+      // Optimistic update for local state
       setItineraries(prev => {
         const currentArray = prev[countryId] || [];
         const index = currentArray.findIndex(i => i.id === newItinData.id);
@@ -90,15 +95,30 @@ export function useCountryState(userId) {
         };
       });
 
-      // Update Firestore (we read the latest from optimistic state)
-      setItineraries(prev => {
-        setDoc(docRef, {
-          itineraries: {
-            [countryId]: prev[countryId]
-          }
-        }, { merge: true });
-        return prev;
-      });
+      // Update User Firestore
+      await setDoc(docRef, {
+        itineraries: {
+          [countryId]: itineraries[countryId] ? 
+            [...itineraries[countryId].filter(i => i.id !== tripId), newItinData] : 
+            [newItinData]
+        }
+      }, { merge: true });
+
+      // Handle Public Share
+      if (newItinData.isPublic) {
+        await setDoc(finalPublicRef, {
+          ...newItinData,
+          userId: user.uid,
+          userName: user.displayName || 'Explorer',
+          userPhoto: user.photoURL || null,
+          countryId,
+          countryName,
+          createdAt: serverTimestamp()
+        });
+      } else {
+        // If it was public and now is private, delete from public collection
+        await deleteDoc(finalPublicRef);
+      }
       
     } catch (error) {
       console.error("Error saving itinerary:", error);
@@ -108,8 +128,12 @@ export function useCountryState(userId) {
   const deleteItinerary = async (countryId, tripId) => {
     if (!userId) return;
     const docRef = doc(db, 'users', userId);
+    const publicRef = doc(db, 'public_itineraries', tripId);
 
     try {
+      // Delete from public feed
+      await deleteDoc(publicRef);
+
       setItineraries(prev => {
         const currentArray = prev[countryId] || [];
         const newArray = currentArray.filter(i => i.id !== tripId);

@@ -38,6 +38,14 @@ vi.mock('topojson-client', () => ({
   feature: () => ({ features: [{ id: 'PRT', properties: { name: 'Portugal' } }] })
 }));
 
+// Mock useCommunityData
+vi.mock('./hooks/useCommunityData', () => ({
+  useCommunityData: () => ({
+    trips: [],
+    loading: false
+  })
+}));
+
 // Mock Map to prevent rendering issues with d3/svg in tests
 vi.mock('./components/Map', () => ({
   default: ({ onCountryClick }) => (
@@ -56,16 +64,21 @@ describe('App Component Happy Paths', () => {
     expect(screen.getByText(/Explorer/i)).toBeInTheDocument();
   });
 
-  it('can switch between Map, Stats, and Trips tabs', async () => {
+  it('can switch between Map, Stats, Feed, and Trips tabs', async () => {
     render(<App />);
     
     // Default should be map view
     expect(screen.getByTestId('mock-map')).toBeInTheDocument();
 
-    // Switch to Stats tab (using role='tab' for shadcn Tabs)
+    // Switch to Stats tab
     const statsTab = screen.getAllByRole('tab', { name: /Stats/i })[0];
     fireEvent.click(statsTab);
     expect(await screen.findByText(/Travel Rank/i)).toBeInTheDocument();
+
+    // Switch to Community/Feed tab
+    const feedTab = screen.getByRole('tab', { name: /Feed/i });
+    fireEvent.click(feedTab);
+    expect(await screen.findByText(/Recent Discoveries/i)).toBeInTheDocument();
 
     // Switch to Trips tab
     const tripsTab = screen.getByRole('tab', { name: /Trips/i });

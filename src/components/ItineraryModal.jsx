@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, Plane, MapPin, Train, Tag, Coins } from 'lucide-react';
+import { Plus, Trash2, Save, Plane, MapPin, Train, Tag, Coins, Globe } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) => {
   const [name, setName] = useState('');
@@ -19,6 +20,7 @@ const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) 
   const [transportation, setTransportation] = useState('');
   const [flights, setFlights] = useState([]);
   const [cost, setCost] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -27,6 +29,7 @@ const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) 
       setTransportation(existingData?.transportation || '');
       setFlights(existingData?.flights || []);
       setCost(existingData?.cost || '');
+      setIsPublic(existingData?.isPublic || false);
     }
   }, [isOpen, existingData]);
 
@@ -59,7 +62,8 @@ const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) 
       cities: cleanCities,
       transportation: transportation.trim(),
       flights: cleanFlights,
-      cost: cost.trim()
+      cost: cost.trim(),
+      isPublic
     });
     onClose();
   };
@@ -78,6 +82,20 @@ const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) 
 
         <div className="flex-1 overflow-y-auto p-6">
           <form id="itinerary-form" onSubmit={handleSubmit} className="space-y-6">
+            <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
+              <div className="space-y-0.5">
+                <Label htmlFor="public-share" className="text-sm font-bold flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-primary" /> Share with Community
+                </Label>
+                <p className="text-[10px] text-muted-foreground">Make this trip visible to everyone in the global feed.</p>
+              </div>
+              <Switch 
+                id="public-share" 
+                checked={isPublic} 
+                onCheckedChange={setIsPublic} 
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="trip-name">

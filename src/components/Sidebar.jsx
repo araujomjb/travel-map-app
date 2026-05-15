@@ -3,13 +3,15 @@ import {
   Search, MapPin, CheckCircle, Heart, XCircle, Landmark, 
   Beer, Dog, Users, Globe, LogOut, User as UserIcon, 
   BarChart2, Map as MapIcon, Flame, TrendingUp, Trophy, 
-  X, Plane, FileText, Plus, Train, ChevronRight, Settings
+  X, Plane, FileText, Plus, Train, ChevronRight, Settings,
+  MessageSquare
 } from 'lucide-react';
 import { CATEGORIES } from '../hooks/useCountryState';
 import { fetchCountryData } from '../data/countryFacts';
 import { auth } from '../lib/firebase';
 import worldData from "../data/world-50m.json";
 import { feature } from "topojson-client";
+import { useCommunityData } from '../hooks/useCommunityData';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +19,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardContent 
+} from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +39,7 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
   const [facts, setFacts] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeTripTab, setActiveTripTab] = useState('overview');
+  const { trips: communityTrips, loading: communityLoading } = useCommunityData();
 
   const allCountries = useMemo(() => {
     const countriesFeature = feature(worldData, worldData.objects.countries).features;
@@ -100,10 +109,11 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
           <div className="space-y-1">
             <p className="px-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Explore</p>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-3 h-9 p-1 bg-muted/50">
+              <TabsList className="grid grid-cols-4 h-9 p-1 bg-muted/50">
                 <TabsTrigger value="map" className="text-[10px] font-bold">Map</TabsTrigger>
                 <TabsTrigger value="stats" className="text-[10px] font-bold">Stats</TabsTrigger>
-                <TabsTrigger value="trips" className="text-[10px] font-bold">Trips</TabsTrigger>
+                <TabsTrigger value="community" className="text-[10px] font-bold px-0">Feed</TabsTrigger>
+                <TabsTrigger value="trips" className="text-[10px] font-bold px-0">Trips</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -317,6 +327,59 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
                   </div>
                </div>
             </div>
+          ) : activeTab === 'community' ? (
+            <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+               <p className="px-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Recent Discoveries</p>
+               
+               {communityLoading ? (
+                 <div className="space-y-3">
+                   {[1, 2, 3].map(i => (
+                     <div key={i} className="h-24 bg-muted animate-pulse rounded-xl"></div>
+                   ))}
+                 </div>
+               ) : communityTrips.length === 0 ? (
+                 <div className="text-center py-10 px-4 bg-muted/20 border-2 border-dashed border-border/50 rounded-2xl">
+                   <MessageSquare className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+                   <p className="text-muted-foreground text-[10px] font-medium leading-relaxed">No public journeys yet. Be the first to share your adventure!</p>
+                 </div>
+               ) : (
+                 <div className="space-y-3">
+                   {communityTrips.map(trip => (
+                     <Card key={trip.id} className="bg-muted/30 border-none shadow-none hover:bg-muted/50 transition-colors cursor-pointer group" onClick={() => onCountryClick({ id: trip.countryId, name: trip.countryName })}>
+                       <CardHeader className="p-3 pb-0 space-y-0 flex-row items-center gap-3">
+                          <Avatar className="h-7 w-7 border border-border shadow-sm">
+                            <AvatarImage src={trip.userPhoto} />
+                            <AvatarFallback className="text-[8px] bg-primary text-primary-foreground font-bold">
+                              {trip.userName?.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 overflow-hidden">
+                            <CardTitle className="text-[10px] font-bold truncate leading-none">{trip.userName}</CardTitle>
+                            <p className="text-[9px] text-muted-foreground truncate font-medium">to {trip.countryName}</p>
+                          </div>
+                          <Badge className="text-[8px] h-4 bg-green-500/10 text-green-600 border-none px-1">
+                            {trip.cost || "Free"}
+                          </Badge>
+                       </CardHeader>
+                       <CardContent className="p-3 pt-2">
+                          <p className="text-[10px] font-bold mb-1 line-clamp-1 group-hover:text-primary transition-colors">{trip.name}</p>
+                          {trip.cities?.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {trip.cities.slice(0, 2).map((c, i) => (
+                                <Badge key={i} variant="outline" className="text-[7px] h-3.5 font-medium px-1 bg-white/50">{c}</Badge>
+                              ))}
+                              {trip.cities.length > 2 && <span className="text-[7px] text-muted-foreground">+{trip.cities.length - 2}</span>}
+                            </div>
+                          )}
+                          <p className="text-[9px] text-muted-foreground italic line-clamp-2 leading-relaxed">
+                            "{trip.transportation || "Exploring the world..."}"
+                          </p>
+                       </CardContent>
+                     </Card>
+                   ))}
+                 </div>
+               )}
+            </div>
           ) : (
             <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
                <div className="text-center py-10 px-4 bg-muted/20 border-2 border-dashed border-border/50 rounded-2xl">
@@ -333,19 +396,19 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
       <div className="p-4 mt-auto border-t border-border/50 shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="w-full h-14 justify-start p-2 hover:bg-muted rounded-xl transition-all font-sans">
-              <Avatar className="h-9 w-9 border-2 border-border shadow-sm">
+            <div className="w-full h-14 flex items-center p-2 hover:bg-muted rounded-xl transition-all font-sans cursor-pointer group">
+              <Avatar className="h-9 w-9 border-2 border-border shadow-sm shrink-0">
                 <AvatarImage src={user?.photoURL} />
                 <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
                   {user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 ml-3 text-left overflow-hidden">
-                <p className="text-[11px] font-bold truncate leading-none mb-1">{user?.displayName || 'Guest Explorer'}</p>
+                <p className="text-[11px] font-bold truncate leading-none mb-1 group-hover:text-primary transition-colors">{user?.displayName || 'Guest Explorer'}</p>
                 <p className="text-[9px] text-muted-foreground truncate leading-none">{user?.email || 'Anonymous'}</p>
               </div>
-              <ChevronRight className="h-3 w-3 text-muted-foreground ml-2" />
-            </Button>
+              <ChevronRight className="h-3 w-3 text-muted-foreground ml-2 shrink-0" />
+            </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64 p-2 rounded-xl shadow-xl border-border/50">
             <DropdownMenuLabel className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-2 py-3">Account</DropdownMenuLabel>
