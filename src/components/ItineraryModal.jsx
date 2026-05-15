@@ -81,7 +81,7 @@ const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) 
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6">
-          <form id="itinerary-form" onSubmit={handleSubmit} className="space-y-6">
+          <form id="itinerary-form" aria-label="Trip Details" onSubmit={handleSubmit} className="space-y-6">
             <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
               <div className="space-y-0.5">
                 <Label htmlFor="public-share" className="text-sm font-bold flex items-center gap-2">
@@ -226,25 +226,24 @@ const ItineraryModal = ({ isOpen, onClose, countryName, existingData, onSave }) 
                 onChange={(e) => setTransportation(e.target.value)}
               />
             </div>
+            
+            <div className="pt-4 flex justify-end gap-2 border-t mt-6">
+              <Button 
+                type="button" 
+                variant="ghost"
+                onClick={onClose}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                className="shadow-md"
+              >
+                <Save className="h-4 w-4" /> Save Itinerary
+              </Button>
+            </div>
           </form>
         </div>
-
-        <DialogFooter className="p-4 bg-muted/30 border-t flex-row justify-end gap-2">
-          <Button 
-            type="button" 
-            variant="ghost"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button 
-            type="submit" 
-            form="itinerary-form"
-            className="shadow-md"
-          >
-            <Save className="h-4 w-4" /> Save Itinerary
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, where } from 'firebase/firestore';
 
-export function useCommunityData() {
+export function useCommunityData(followingIds = []) {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // We'll use a single query for global, and filter locally for following
+    // because Firestore 'in' queries have limits and require complex indexing.
+    // For a more robust app, we'd have a separate 'following' query logic.
     const q = query(
       collection(db, 'public_itineraries'),
       orderBy('createdAt', 'desc'),
@@ -28,5 +31,8 @@ export function useCommunityData() {
     return () => unsubscribe();
   }, []);
 
-  return { trips, loading };
+  // Compute following trips locally
+  const followingTrips = trips.filter(trip => followingIds.includes(trip.userId));
+
+  return { trips, followingTrips, loading };
 }

@@ -4,8 +4,9 @@ import Map from './components/Map';
 import Auth from './components/Auth';
 import TripsDashboard from './components/TripsDashboard';
 import { useCountryState } from './hooks/useCountryState';
-import { auth } from './lib/firebase';
+import { auth, db } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { 
   Menu, Search, BarChart2, CheckCircle, 
   Heart, X, MapPin, Plane, FileText, Globe, 
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 import { CATEGORIES } from './hooks/useCountryState';
 import ItineraryModal from './components/ItineraryModal';
+import FindFriendsModal from './components/FindFriendsModal';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,13 +28,30 @@ function App() {
   const [isItineraryModalOpen, setIsItineraryModalOpen] = useState(false);
   const [itineraryToEdit, setItineraryToEdit] = useState(null);
   const [activeTab, setActiveTab] = useState('map'); 
+  const [isFindFriendsOpen, setIsFindFriendsOpen] = useState(false);
   
-  const { countries, setCategory, counts, loading: dataLoading, itineraries, saveItinerary, deleteItinerary } = useCountryState(user);
+  const { 
+    countries, setCategory, counts, loading: dataLoading, 
+    itineraries, saveItinerary, deleteItinerary,
+    following, followUser, unfollowUser 
+  } = useCountryState(user);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
+
+      if (currentUser) {
+        // Sync user profile to Firestore for searchability
+        const userRef = doc(db, 'users', currentUser.uid);
+        await setDoc(userRef, {
+          uid: currentUser.uid,
+          displayName: currentUser.displayName || (currentUser.isAnonymous ? 'Guest Explorer' : currentUser.email.split('@')[0]),
+          email: currentUser.email,
+          photoURL: currentUser.photoURL || null,
+          lastLogin: new Date().toISOString()
+        }, { merge: true });
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -92,6 +111,7 @@ function App() {
         onOpenItinerary={openItineraryModal}
         activeTab={activeTab}
         setActiveTab={handleTabChange}
+        onOpenFindFriends={() => setIsFindFriendsOpen(true)}
       />
       
       <main className="flex-1 h-full w-full p-2 md:p-4 flex items-center justify-center relative z-0 overflow-hidden">
@@ -194,6 +214,15 @@ function App() {
             saveItinerary(selectedCountry.id, selectedCountry.name, data);
           }
         }}
+      />
+
+      <FindFriendsModal
+        isOpen={isFindFriendsOpen}
+        onClose={() => setIsFindFriendsOpen(false)}
+        currentUserId={user.uid}
+        following={following}
+        onFollow={followUser}
+        onUnfollow={unfollowUser}
       />
     </div>
   );

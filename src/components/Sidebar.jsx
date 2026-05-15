@@ -4,7 +4,7 @@ import {
   Beer, Dog, Users, Globe, LogOut, User as UserIcon, 
   BarChart2, Map as MapIcon, Flame, TrendingUp, Trophy, 
   X, Plane, FileText, Plus, Train, ChevronRight, Settings,
-  MessageSquare
+  MessageSquare, UserPlus, Users2
 } from 'lucide-react';
 import { CATEGORIES } from '../hooks/useCountryState';
 import { fetchCountryData } from '../data/countryFacts';
@@ -28,18 +28,20 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts, user, isOpen, onClose, itineraries, onOpenItinerary, activeTab, setActiveTab }) => {
+const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts, user, isOpen, onClose, itineraries, onOpenItinerary, activeTab, setActiveTab, onOpenFindFriends, following }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [facts, setFacts] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeTripTab, setActiveTripTab] = useState('overview');
-  const { trips: communityTrips, loading: communityLoading } = useCommunityData();
+  const [feedType, setFeedType] = useState('global');
+  const { trips: globalTrips, followingTrips, loading: communityLoading } = useCommunityData(following || []);
 
   const allCountries = useMemo(() => {
     const countriesFeature = feature(worldData, worldData.objects.countries).features;
@@ -78,6 +80,8 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
   };
 
   const percentile = calculatePercentile(counts[CATEGORIES.VISITED]);
+
+  const displayTrips = feedType === 'global' ? globalTrips : followingTrips;
 
   return (
     <div className={`
@@ -340,8 +344,32 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
                </div>
             </div>
           ) : activeTab === 'community' ? (
-            <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
-               <p className="px-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Recent Discoveries</p>
+            <div className="space-y-4 animate-in slide-in-from-right-4 duration-300 h-full flex flex-col">
+               <div className="flex items-center justify-between px-2">
+                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Community Feed</p>
+                 <Button variant="ghost" size="xs" onClick={onOpenFindFriends} className="h-6 text-[9px] font-bold text-primary hover:bg-primary/5">
+                   <UserPlus className="h-3 w-3 mr-1" /> FIND FRIENDS
+                 </Button>
+               </div>
+
+               <div className="flex gap-1 px-1">
+                 <Button 
+                   variant={feedType === 'global' ? "secondary" : "ghost"} 
+                   size="xs" 
+                   onClick={() => setFeedType('global')}
+                   className="flex-1 h-7 text-[9px] font-bold uppercase"
+                 >
+                   <Globe className="h-3 w-3 mr-1" /> Global
+                 </Button>
+                 <Button 
+                   variant={feedType === 'following' ? "secondary" : "ghost"} 
+                   size="xs" 
+                   onClick={() => setFeedType('following')}
+                   className="flex-1 h-7 text-[9px] font-bold uppercase"
+                 >
+                   <Users2 className="h-3 w-3 mr-1" /> Following
+                 </Button>
+               </div>
                
                {communityLoading ? (
                  <div className="space-y-3">
@@ -349,14 +377,18 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
                      <div key={i} className="h-24 bg-muted animate-pulse rounded-xl"></div>
                    ))}
                  </div>
-               ) : communityTrips.length === 0 ? (
-                 <div className="text-center py-10 px-4 bg-muted/20 border-2 border-dashed border-border/50 rounded-2xl">
+               ) : displayTrips.length === 0 ? (
+                 <div className="text-center py-10 px-4 bg-muted/20 border-2 border-dashed border-border/50 rounded-2xl mt-2">
                    <MessageSquare className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
-                   <p className="text-muted-foreground text-[10px] font-medium leading-relaxed">No public journeys yet. Be the first to share your adventure!</p>
+                   <p className="text-muted-foreground text-[10px] font-medium leading-relaxed">
+                     {feedType === 'global' 
+                       ? "No public journeys yet. Be the first to share your adventure!"
+                       : "Your friends haven't shared anything yet. Find friends to see their trips here!"}
+                   </p>
                  </div>
                ) : (
-                 <div className="space-y-3">
-                   {communityTrips.map(trip => (
+                 <div className="space-y-3 overflow-y-auto pb-10 no-scrollbar">
+                   {displayTrips.map(trip => (
                      <Card key={trip.id} className="bg-muted/30 border-none shadow-none hover:bg-muted/50 transition-colors cursor-pointer group" onClick={() => onCountryClick({ id: trip.countryId, name: trip.countryName })}>
                        <CardHeader className="p-3 pb-0 space-y-0 flex-row items-center gap-3">
                           <Avatar className="h-7 w-7 border border-border shadow-sm">
@@ -423,18 +455,23 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64 p-2 rounded-xl shadow-xl border-border/50">
-            <DropdownMenuLabel className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-2 py-3">Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="rounded-lg p-2.5 text-xs font-medium focus:bg-primary/10">
-              <UserIcon className="h-3.5 w-3.5 mr-2" /> Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem className="rounded-lg p-2.5 text-xs font-medium focus:bg-primary/10">
-              <Settings className="h-3.5 w-3.5 mr-2" /> Settings
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="rounded-lg p-2.5 text-xs font-medium text-destructive focus:bg-destructive/10">
-              <LogOut className="h-3.5 w-3.5 mr-2" /> Sign Out
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-2 py-3">Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="rounded-lg p-2.5 text-xs font-medium focus:bg-primary/10">
+                <UserIcon className="h-3.5 w-3.5 mr-2" /> Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onOpenFindFriends} className="rounded-lg p-2.5 text-xs font-medium focus:bg-primary/10">
+                <UserPlus className="h-3.5 w-3.5 mr-2" /> Find Friends
+              </DropdownMenuItem>
+              <DropdownMenuItem className="rounded-lg p-2.5 text-xs font-medium focus:bg-primary/10">
+                <Settings className="h-3.5 w-3.5 mr-2" /> Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut} className="rounded-lg p-2.5 text-xs font-medium text-destructive focus:bg-destructive/10">
+                <LogOut className="h-3.5 w-3.5 mr-2" /> Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

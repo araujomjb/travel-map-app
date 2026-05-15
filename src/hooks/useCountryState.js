@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { doc, onSnapshot, setDoc, deleteField, updateDoc, increment, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, deleteField, updateDoc, increment, deleteDoc, serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
 
 export const CATEGORIES = {
   VISITED: 'visited',
@@ -18,6 +18,7 @@ export function useCountryState(user) {
   const userId = user?.uid;
   const [countries, setCountries] = useState({});
   const [itineraries, setItineraries] = useState({});
+  const [following, setFollowing] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Sync with Firestore
@@ -25,6 +26,7 @@ export function useCountryState(user) {
     if (!userId) {
       setCountries({});
       setItineraries({});
+      setFollowing([]);
       setLoading(false);
       return;
     }
@@ -36,6 +38,7 @@ export function useCountryState(user) {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setCountries(data.countries || {});
+        setFollowing(data.following || []);
         
         // Ensure itineraries is always a map of arrays
         const rawItin = data.itineraries || {};
@@ -52,6 +55,7 @@ export function useCountryState(user) {
       } else {
         setCountries({});
         setItineraries({});
+        setFollowing([]);
       }
       setLoading(false);
     }, (error) => {
@@ -211,10 +215,34 @@ export function useCountryState(user) {
     }
   };
 
+  const followUser = async (targetUserId) => {
+    if (!userId || !targetUserId) return;
+    const docRef = doc(db, 'users', userId);
+    try {
+      await updateDoc(docRef, {
+        following: arrayUnion(targetUserId)
+      });
+    } catch (error) {
+      console.error("Error following user:", error);
+    }
+  };
+
+  const unfollowUser = async (targetUserId) => {
+    if (!userId || !targetUserId) return;
+    const docRef = doc(db, 'users', userId);
+    try {
+      await updateDoc(docRef, {
+        following: arrayRemove(targetUserId)
+      });
+    } catch (error) {
+      console.error("Error unfollowing user:", error);
+    }
+  };
+
   const counts = {
     [CATEGORIES.VISITED]: Object.values(countries).filter(c => c === CATEGORIES.VISITED).length,
     [CATEGORIES.WANT_TO_VISIT]: Object.values(countries).filter(c => c === CATEGORIES.WANT_TO_VISIT).length
   };
 
-  return { countries, setCategory, counts, loading, itineraries, saveItinerary, deleteItinerary };
+  return { countries, setCategory, counts, loading, itineraries, saveItinerary, deleteItinerary, following, followUser, unfollowUser };
 }

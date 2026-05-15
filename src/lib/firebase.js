@@ -3,13 +3,13 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBWCv3nTwwxYd3QHnHefgthXo2kPlGNNvw",
-  authDomain: "traveler-map-c681a.firebaseapp.com",
-  projectId: "traveler-map-c681a",
-  storageBucket: "traveler-map-c681a.firebasestorage.app",
-  messagingSenderId: "621146976694",
-  appId: "1:621146976694:web:c53d99a6f25426fa95d117",
-  measurementId: "G-YWH5JX1LCQ"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
