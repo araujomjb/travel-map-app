@@ -78,8 +78,8 @@ const TripsDashboard = ({ itineraries, onEdit, onDelete, onAddNew }) => {
             </p>
           </div>
           <div className="flex gap-2">
-             <Button variant="outline" size="sm" onClick={() => window.print()} className="rounded-lg h-9 font-bold text-xs uppercase tracking-wider">Export PDF</Button>
-             <Button size="sm" onClick={onAddNew} className="rounded-lg h-9 font-bold text-xs uppercase tracking-wider shadow-md">Add New</Button>
+             <Button variant="outline" size="sm" disabled onClick={() => window.print()} className="rounded-lg h-9 font-bold text-xs uppercase tracking-wider">Export PDF</Button>
+             <Button size="sm" disabled onClick={onAddNew} className="rounded-lg h-9 font-bold text-xs uppercase tracking-wider shadow-md">Add New</Button>
           </div>
         </div>
 
