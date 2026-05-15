@@ -27,7 +27,7 @@ function App() {
   const [itineraryToEdit, setItineraryToEdit] = useState(null);
   const [activeTab, setActiveTab] = useState('map'); 
   
-  const { countries, setCategory, counts, loading: dataLoading, itineraries, saveItinerary, deleteItinerary } = useCountryState(user?.uid);
+  const { countries, setCategory, counts, loading: dataLoading, itineraries, saveItinerary, deleteItinerary } = useCountryState(user);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
