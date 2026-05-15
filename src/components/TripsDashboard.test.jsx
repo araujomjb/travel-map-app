@@ -22,7 +22,7 @@ describe('TripsDashboard Component', () => {
     expect(screen.getByText('Start your journey')).toBeInTheDocument();
   });
 
-  it('renders trip cards correctly and has functional top buttons', () => {
+  it('renders trip cards correctly and has disabled top buttons', () => {
     const mockItineraries = {
       'PRT': [
         { id: '1', name: 'Summer in Lisbon', cities: ['Lisbon'], cost: '$1000' }
@@ -37,15 +37,18 @@ describe('TripsDashboard Component', () => {
     expect(screen.getByText('My Itineraries')).toBeInTheDocument();
     expect(screen.getByText('Summer in Lisbon')).toBeInTheDocument();
     
-    // Check buttons
+    // Check buttons are disabled
     const exportBtn = screen.getByText(/Export PDF/i);
     const addNewBtn = screen.getByText(/Add New/i);
     
+    expect(exportBtn).toBeDisabled();
+    expect(addNewBtn).toBeDisabled();
+    
     fireEvent.click(exportBtn);
-    expect(window.print).toHaveBeenCalled();
+    expect(window.print).not.toHaveBeenCalled();
     
     fireEvent.click(addNewBtn);
-    expect(onAddNew).toHaveBeenCalled();
+    expect(onAddNew).not.toHaveBeenCalled();
   });
 
   it('calls onDelete when delete button is clicked and confirmed', () => {
