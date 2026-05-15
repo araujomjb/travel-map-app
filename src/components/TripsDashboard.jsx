@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { feature } from "topojson-client";
 import worldData from "../data/world-50m.json";
 
-const TripsDashboard = ({ itineraries, onEdit, onDelete }) => {
+const TripsDashboard = ({ itineraries, onEdit, onDelete, onAddNew }) => {
   
   const allCountries = useMemo(() => {
     const countriesFeature = feature(worldData, worldData.objects.countries).features;
@@ -78,8 +78,8 @@ const TripsDashboard = ({ itineraries, onEdit, onDelete }) => {
             </p>
           </div>
           <div className="flex gap-2">
-             <Button variant="outline" size="sm" className="rounded-lg h-9 font-bold text-xs uppercase tracking-wider">Export PDF</Button>
-             <Button size="sm" className="rounded-lg h-9 font-bold text-xs uppercase tracking-wider shadow-md">Add New</Button>
+             <Button variant="outline" size="sm" onClick={() => window.print()} className="rounded-lg h-9 font-bold text-xs uppercase tracking-wider">Export PDF</Button>
+             <Button size="sm" onClick={onAddNew} className="rounded-lg h-9 font-bold text-xs uppercase tracking-wider shadow-md">Add New</Button>
           </div>
         </div>
 

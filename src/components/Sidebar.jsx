@@ -122,6 +122,18 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
 
           {activeTab === 'map' ? (
             <div className="space-y-6">
+              {/* Summary Stats */}
+              <div className="grid grid-cols-2 gap-3 px-1">
+                <div className="bg-muted/30 p-3 rounded-xl border border-border/50 text-center">
+                  <div className="text-xl font-bold text-green-600">{counts[CATEGORIES.VISITED]}</div>
+                  <div className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Visited</div>
+                </div>
+                <div className="bg-muted/30 p-3 rounded-xl border border-border/50 text-center">
+                  <div className="text-xl font-bold text-blue-600">{counts[CATEGORIES.WANT_TO_VISIT]}</div>
+                  <div className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Wants</div>
+                </div>
+              </div>
+
               {/* Search Section */}
               <div className="space-y-2">
                 <p className="px-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Search</p>

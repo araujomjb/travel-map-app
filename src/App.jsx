@@ -112,7 +112,8 @@ function App() {
                   setSelectedCountry({ id: countryId, name: tripData.countryName });
                   openItineraryModal(tripData);
                 }} 
-                onDelete={deleteItinerary} 
+                onDelete={deleteItinerary}
+                onAddNew={() => setActiveTab('map')}
              />
           </div>
         ) : (
@@ -190,7 +191,7 @@ function App() {
         existingData={itineraryToEdit}
         onSave={(data) => {
           if (selectedCountry) {
-            saveItinerary(selectedCountry.id, data);
+            saveItinerary(selectedCountry.id, selectedCountry.name, data);
           }
         }}
       />

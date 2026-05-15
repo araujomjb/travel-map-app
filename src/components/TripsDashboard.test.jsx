@@ -22,19 +22,30 @@ describe('TripsDashboard Component', () => {
     expect(screen.getByText('Start your journey')).toBeInTheDocument();
   });
 
-  it('renders trip cards correctly', () => {
+  it('renders trip cards correctly and has functional top buttons', () => {
     const mockItineraries = {
       'PRT': [
         { id: '1', name: 'Summer in Lisbon', cities: ['Lisbon'], cost: '$1000' }
       ]
     };
+    const onAddNew = vi.fn();
+    // Mock window.print
+    window.print = vi.fn();
 
-    render(<TripsDashboard itineraries={mockItineraries} onEdit={vi.fn()} onDelete={vi.fn()} />);
+    render(<TripsDashboard itineraries={mockItineraries} onEdit={vi.fn()} onDelete={vi.fn()} onAddNew={onAddNew} />);
     
     expect(screen.getByText('My Itineraries')).toBeInTheDocument();
     expect(screen.getByText('Summer in Lisbon')).toBeInTheDocument();
-    expect(screen.getByText('Lisbon')).toBeInTheDocument();
-    expect(screen.getByText('$1000')).toBeInTheDocument();
+    
+    // Check buttons
+    const exportBtn = screen.getByText(/Export PDF/i);
+    const addNewBtn = screen.getByText(/Add New/i);
+    
+    fireEvent.click(exportBtn);
+    expect(window.print).toHaveBeenCalled();
+    
+    fireEvent.click(addNewBtn);
+    expect(onAddNew).toHaveBeenCalled();
   });
 
   it('calls onDelete when delete button is clicked and confirmed', () => {

@@ -61,10 +61,16 @@ describe('Sidebar Component Happy Paths', () => {
     });
   });
 
-  it('renders without crashing and displays user info', () => {
-    render(<Sidebar {...mockProps} />);
+  it('renders without crashing and displays user info and counts', () => {
+    const props = {
+      ...mockProps,
+      counts: { visited: 5, wantToVisit: 10 }
+    };
+    render(<Sidebar {...props} />);
     expect(screen.getByText('Eu fui')).toBeInTheDocument();
     expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.getByText('10')).toBeInTheDocument();
   });
 
   it('displays country facts when a country is selected', async () => {
