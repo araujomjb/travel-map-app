@@ -1,5 +1,12 @@
 import React, { useMemo } from 'react';
 import { MapPin, Plane, Train, Edit, Trash2, Calendar, Coins } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardContent 
+} from "@/components/ui/card";
 import { feature } from "topojson-client";
 import worldData from "../data/world-50m.json";
 
@@ -38,55 +45,58 @@ const TripsDashboard = ({ itineraries, onEdit, onDelete }) => {
 
   if (allTrips.length === 0) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 p-6 animate-in fade-in">
-        <div className="bg-white p-10 rounded-3xl shadow-sm border border-slate-100 text-center max-w-md">
-          <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Plane className="h-8 w-8 text-slate-300" />
+      <div className="w-full h-full flex flex-col items-center justify-center bg-muted/30 p-6 animate-in fade-in">
+        <Card className="p-10 text-center max-w-md border-none shadow-none bg-transparent">
+          <div className="bg-muted w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Plane className="h-8 w-8 text-muted-foreground/30" />
           </div>
-          <h2 className="text-xl font-bold text-slate-800 mb-2">No trips logged yet</h2>
-          <p className="text-slate-500 text-sm">
+          <h2 className="text-xl font-bold text-foreground mb-2">No trips logged yet</h2>
+          <p className="text-muted-foreground text-sm">
             Go to the Map, select a country you've visited, and click "Add Trip" to start building your travel diary.
           </p>
-        </div>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full bg-slate-50 overflow-y-auto p-4 md:p-8 animate-in fade-in">
+    <div className="w-full h-full bg-muted/30 overflow-y-auto p-4 md:p-8 animate-in fade-in">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">My Itineraries</h1>
-          <p className="text-slate-500 font-medium">You have logged {allTrips.length} trips across the globe.</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">My Itineraries</h1>
+          <p className="text-muted-foreground font-medium">You have logged {allTrips.length} trips across the globe.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {allTrips.map(trip => (
-            <div key={trip.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col group hover:shadow-md transition-all">
+            <Card key={trip.id} className="overflow-hidden flex flex-col group hover:shadow-md transition-all border-border/50">
               
-              {/* Card Header */}
-              <div className="p-5 border-b border-slate-100 bg-slate-50/50">
+              <CardHeader className="p-5 border-b bg-muted/10 space-y-0">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-lg text-slate-800 line-clamp-1">{trip.name}</h3>
+                  <CardTitle className="font-bold text-lg line-clamp-1">{trip.name}</CardTitle>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
+                    <Button 
+                      variant="ghost"
+                      size="icon-xs"
                       onClick={() => onEdit(trip.countryId, trip)}
-                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="text-muted-foreground hover:text-blue-600 hover:bg-blue-50"
                       title="Edit Trip"
                     >
                       <Edit className="h-4 w-4" />
-                    </button>
-                    <button 
+                    </Button>
+                    <Button 
+                      variant="ghost"
+                      size="icon-xs"
                       onClick={() => handleDelete(trip.countryId, trip.id, trip.name)}
-                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="text-muted-foreground hover:text-red-600 hover:bg-red-50"
                       title="Delete Trip"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                   <div className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5 text-emerald-500" /> {trip.countryName}
                   </div>
@@ -96,10 +106,9 @@ const TripsDashboard = ({ itineraries, onEdit, onDelete }) => {
                     </div>
                   )}
                 </div>
-              </div>
+              </CardHeader>
 
-              {/* Card Body */}
-              <div className="p-5 flex-1 space-y-4">
+              <CardContent className="p-5 flex-1 space-y-4">
                 {trip.cities && trip.cities.length > 0 && (
                   <div>
                     <div className="flex flex-wrap gap-1.5">
@@ -133,9 +142,9 @@ const TripsDashboard = ({ itineraries, onEdit, onDelete }) => {
                     <p className="leading-relaxed line-clamp-3">{trip.transportation}</p>
                   </div>
                 )}
-              </div>
+              </CardContent>
 
-            </div>
+            </Card>
           ))}
         </div>
       </div>

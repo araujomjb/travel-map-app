@@ -5,6 +5,10 @@ import { fetchCountryData } from '../data/countryFacts';
 import { auth } from '../lib/firebase';
 import worldData from "../data/world-50m.json";
 import { feature } from "topojson-client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, counts, user, isOpen, onClose, itineraries, onOpenItinerary, activeTab, setActiveTab }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,59 +66,56 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
           <h1 className="text-2xl font-bold text-slate-800 mb-0.5 tracking-tight">Eu fui</h1>
           <p className="text-slate-400 text-[11px] font-medium uppercase tracking-widest">Global Atlas</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button 
+        <div className="flex items-center gap-1">
+          <Button 
+            variant="ghost"
+            size="icon-sm"
             onClick={handleSignOut}
-            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+            className="text-slate-400 hover:text-red-500 hover:bg-red-50"
             title="Sign Out"
           >
             <LogOut className="h-5 w-5" />
-          </button>
+          </Button>
           {/* Close button for Mobile */}
-          <button 
+          <Button 
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
-            className="md:hidden p-2 text-slate-400 hover:text-slate-900 bg-slate-50 rounded-xl transition-all"
+            className="md:hidden text-slate-400 hover:text-slate-900 bg-slate-50"
           >
             <X className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* User Profile */}
       <div className="mb-6 p-3 bg-slate-900 rounded-2xl flex items-center gap-3 shadow-md border border-slate-800">
-        <div className="p-2 bg-slate-800 rounded-xl text-white">
-          <UserIcon className="h-4 w-4" />
-        </div>
+        <Avatar className="h-9 w-9 border-2 border-slate-700">
+          <AvatarImage src={user?.photoURL} />
+          <AvatarFallback className="bg-slate-800 text-white">
+            <UserIcon className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
         <div className="overflow-hidden">
-          <div className="text-white text-xs font-bold truncate">{user?.displayName || (user?.isAnonymous ? 'Guest Explorer' : user?.email.split('@')[0])}</div>
+          <div className="text-white text-xs font-bold truncate">{user?.displayName || (user?.isAnonymous ? 'Guest Explorer' : user?.email?.split('@')[0])}</div>
           <div className="text-slate-400 text-[10px] truncate">{user?.email || 'Temporary Session'}</div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
-        <button 
-          onClick={() => setActiveTab('map')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all ${activeTab === 'map' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:bg-white/50'}`}
-        >
-          <MapIcon className="h-3.5 w-3.5" />
-          Map
-        </button>
-        <button 
-          onClick={() => setActiveTab('stats')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all ${activeTab === 'stats' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:bg-white/50'}`}
-        >
-          <BarChart2 className="h-3.5 w-3.5" />
-          Stats
-        </button>
-        <button 
-          onClick={() => setActiveTab('trips')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-bold transition-all ${activeTab === 'trips' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:bg-white/50'}`}
-        >
-          <Plane className="h-3.5 w-3.5" />
-          Trips
-        </button>
-      </div>
+      {/* Main Navigation Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList className="w-full">
+          <TabsTrigger value="map" className="flex-1 text-[11px] font-bold">
+            <MapIcon className="h-3.5 w-3.5" /> Map
+          </TabsTrigger>
+          <TabsTrigger value="stats" className="flex-1 text-[11px] font-bold">
+            <BarChart2 className="h-3.5 w-3.5" /> Stats
+          </TabsTrigger>
+          <TabsTrigger value="trips" className="flex-1 text-[11px] font-bold">
+            <Plane className="h-3.5 w-3.5" /> Trips
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {activeTab === 'map' ? (
         <>
@@ -130,19 +131,18 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
           </div>
 
           <div className="relative mb-6">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none z-10">
               <Search className="h-4 w-4 text-slate-400" />
             </div>
-            <input
-              type="text"
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-200 transition-all"
+            <Input
+              className="pl-9 h-10"
               placeholder="Search country..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             
             {filteredCountries.length > 0 && (
-              <div className="absolute z-10 w-full mt-2 bg-white border border-slate-100 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                 {filteredCountries.map(c => (
                   <button
                     key={c.id}
@@ -172,7 +172,6 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
                   )}
                 </div>
 
-                {/* Popularity indicator */}
                 {!loading && facts?.popularity > 0 && (
                   <div className="flex items-center gap-1.5 mb-4 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded-full w-fit">
                     <Flame className="h-3 w-3" />
@@ -180,63 +179,63 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
                   </div>
                 )}
 
-                {/* Category Buttons */}
                 <div className="grid grid-cols-2 gap-2 mb-6">
-                  <button
+                  <Button
                     onClick={() => setCategory(selectedCountry.id, CATEGORIES.VISITED)}
-                    className={`flex flex-col items-center justify-center gap-1 py-2 rounded-xl text-[11px] font-bold transition-all ${
-                      currentCategory === CATEGORIES.VISITED
-                        ? 'bg-green-500 text-white shadow-md'
-                        : 'bg-white text-slate-600 hover:bg-green-50 border border-slate-100'
+                    variant={currentCategory === CATEGORIES.VISITED ? "default" : "outline"}
+                    className={`flex flex-col h-auto py-2 gap-1 rounded-xl text-[11px] font-bold ${
+                      currentCategory === CATEGORIES.VISITED ? "bg-green-500 hover:bg-green-600 text-white shadow-md border-transparent" : "bg-white text-slate-600 hover:bg-green-50"
                     }`}
                   >
                     <CheckCircle className="h-4 w-4" />
                     Visited
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => setCategory(selectedCountry.id, CATEGORIES.WANT_TO_VISIT)}
-                    className={`flex flex-col items-center justify-center gap-1 py-2 rounded-xl text-[11px] font-bold transition-all ${
-                      currentCategory === CATEGORIES.WANT_TO_VISIT
-                        ? 'bg-blue-500 text-white shadow-md'
-                        : 'bg-white text-slate-600 hover:bg-green-50 border border-slate-100'
+                    variant={currentCategory === CATEGORIES.WANT_TO_VISIT ? "default" : "outline"}
+                    className={`flex flex-col h-auto py-2 gap-1 rounded-xl text-[11px] font-bold ${
+                      currentCategory === CATEGORIES.WANT_TO_VISIT ? "bg-blue-500 hover:bg-blue-600 text-white shadow-md border-transparent" : "bg-white text-slate-600 hover:bg-blue-50"
                     }`}
                   >
                     <Heart className="h-4 w-4" />
                     Want
-                  </button>
+                  </Button>
                 </div>
 
-                {/* Trip Tabs - Only visible if Visited */}
                 {currentCategory === CATEGORIES.VISITED && (
                   <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
-                    <button
+                    <Button
+                      size="sm"
+                      variant={activeTripTab === 'overview' ? "default" : "secondary"}
                       onClick={() => setActiveTripTab('overview')}
-                      className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${activeTripTab === 'overview' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                      className={`whitespace-nowrap h-7 px-3 text-[11px] font-bold ${activeTripTab === 'overview' ? 'bg-slate-800' : ''}`}
                     >
                       Overview
-                    </button>
+                    </Button>
                     {currentItineraries.map((trip) => (
-                      <button
+                      <Button
                         key={trip.id}
+                        size="sm"
+                        variant={activeTripTab === trip.id ? "default" : "secondary"}
                         onClick={() => setActiveTripTab(trip.id)}
-                        className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${activeTripTab === trip.id ? 'bg-emerald-500 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100'}`}
+                        className={`whitespace-nowrap h-7 px-3 text-[11px] font-bold ${activeTripTab === trip.id ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-100'}`}
                       >
                         {trip.name}
-                      </button>
+                      </Button>
                     ))}
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => onOpenItinerary()}
-                      className="whitespace-nowrap flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-400 border border-dashed border-slate-300 hover:bg-slate-50 hover:text-slate-600 transition-all"
+                      className="whitespace-nowrap h-7 px-3 text-[11px] font-bold text-slate-400 border-dashed border-slate-300 hover:bg-slate-50 hover:text-slate-600"
                     >
                       <Plus className="h-3 w-3" /> Add Trip
-                    </button>
+                    </Button>
                   </div>
                 )}
 
-                {/* Tab Content */}
                 {activeTripTab === 'overview' ? (
                   <>
-                    {/* Fun Facts Section */}
                     {loading ? (
                       <div className="space-y-4 py-10 animate-pulse flex flex-col items-center justify-center">
                         <div className="h-4 w-32 bg-slate-200 rounded"></div>
@@ -297,7 +296,6 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
                     )}
                   </>
                 ) : (
-                  // Trip Details View
                   <div className="space-y-4 pt-4 border-t border-slate-200/60 animate-in fade-in duration-300">
                     {(() => {
                       const trip = currentItineraries.find(t => t.id === activeTripTab);
@@ -306,12 +304,14 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
                         <>
                           <div className="flex justify-between items-center mb-2">
                             <h4 className="font-bold text-slate-800 text-sm">{trip.name}</h4>
-                            <button
+                            <Button
+                              variant="secondary"
+                              size="xs"
                               onClick={() => onOpenItinerary(trip)}
-                              className="text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-md transition-colors flex items-center gap-1"
+                              className="h-6 text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 flex items-center gap-1"
                             >
                               <FileText className="h-3 w-3" /> Edit
-                            </button>
+                            </Button>
                           </div>
 
                           {trip.cities && trip.cities.length > 0 && (
@@ -363,13 +363,14 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
                 )}
 
                 {currentCategory && !loading && (
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => setCategory(selectedCountry.id, CATEGORIES.NONE)}
-                    className="w-full mt-6 text-[10px] font-bold text-slate-400 hover:text-red-400 transition-colors uppercase tracking-tight flex items-center justify-center gap-1"
+                    className="w-full mt-6 h-auto p-0 text-[10px] font-bold text-slate-400 hover:text-red-400 hover:bg-transparent transition-colors uppercase tracking-tight flex items-center justify-center gap-1"
                   >
                     <XCircle className="h-3 w-3" />
                     Clear Selection
-                  </button>
+                  </Button>
                 )}
               </div>
             ) : (
@@ -379,7 +380,7 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
             )}
           </div>
         </>
-      ) : (
+      ) : activeTab === 'stats' ? (
         <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-6 pb-20 md:pb-0">
           <div className="bg-slate-900 p-6 rounded-3xl text-white shadow-xl relative overflow-hidden">
              <Trophy className="absolute -bottom-2 -right-2 h-20 w-20 text-white/10 rotate-12" />
@@ -423,6 +424,14 @@ const Sidebar = ({ selectedCountry, onCountryClick, setCategory, countries, coun
                   : "Try a different continent! Experiencing diverse cultures is what makes a true World Citizen."}
              </p>
           </div>
+        </div>
+      ) : (
+        <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+           <div className="text-center py-12 px-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+              <Plane className="h-10 w-10 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-slate-800 font-bold mb-1">Full Trip View Active</h3>
+              <p className="text-slate-400 text-xs">Your detailed itineraries are currently visible in the main panel.</p>
+           </div>
         </div>
       )}
     </div>

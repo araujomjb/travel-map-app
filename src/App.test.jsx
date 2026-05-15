@@ -56,21 +56,21 @@ describe('App Component Happy Paths', () => {
     expect(screen.getAllByText(/Search & Stats/i)[0]).toBeInTheDocument();
   });
 
-  it('can switch between Map, Stats, and Trips tabs', () => {
+  it('can switch between Map, Stats, and Trips tabs', async () => {
     render(<App />);
     
     // Default should be map view
     expect(screen.getByTestId('mock-map')).toBeInTheDocument();
 
-    // Switch to Stats tab (first one is in the sidebar)
-    const statsTab = screen.getAllByRole('button', { name: /Stats/i })[0];
+    // Switch to Stats tab (using role='tab' for shadcn Tabs)
+    const statsTab = screen.getAllByRole('tab', { name: /Stats/i })[0];
     fireEvent.click(statsTab);
-    expect(screen.getByText(/Travel Rank/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Travel Rank/i)).toBeInTheDocument();
 
     // Switch to Trips tab
-    const tripsTab = screen.getByRole('button', { name: /Trips/i });
+    const tripsTab = screen.getByRole('tab', { name: /Trips/i });
     fireEvent.click(tripsTab);
-    expect(screen.getByText('My Itineraries')).toBeInTheDocument();
+    expect(await screen.findByText('My Itineraries')).toBeInTheDocument();
     expect(screen.queryByTestId('mock-map')).not.toBeInTheDocument();
   });
 
