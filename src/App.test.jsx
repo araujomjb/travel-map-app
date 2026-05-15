@@ -53,7 +53,7 @@ describe('App Component Happy Paths', () => {
   it('renders the authenticated layout', () => {
     render(<App />);
     expect(screen.getByTestId('mock-map')).toBeInTheDocument();
-    expect(screen.getAllByText(/Search & Stats/i)[0]).toBeInTheDocument();
+    expect(screen.getByText(/Explorer/i)).toBeInTheDocument();
   });
 
   it('can switch between Map, Stats, and Trips tabs', async () => {

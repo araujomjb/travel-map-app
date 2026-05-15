@@ -19,7 +19,7 @@ vi.mock('../data/world-50m.json', () => ({
 describe('TripsDashboard Component', () => {
   it('renders empty state when no itineraries', () => {
     render(<TripsDashboard itineraries={{}} onEdit={vi.fn()} onDelete={vi.fn()} />);
-    expect(screen.getByText('No trips logged yet')).toBeInTheDocument();
+    expect(screen.getByText('Start your journey')).toBeInTheDocument();
   });
 
   it('renders trip cards correctly', () => {

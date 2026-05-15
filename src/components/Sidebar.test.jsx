@@ -90,8 +90,8 @@ describe('Sidebar Component Happy Paths', () => {
     // Click the trip tab
     fireEvent.click(screen.getByText('Summer Trip'));
     
-    // Should show cities of that trip
-    expect(screen.getByText('Cities')).toBeInTheDocument();
+    // Should show cities of that trip (Lisbon is in the mock)
+    expect(screen.getAllByText('Lisbon').length).toBeGreaterThan(0);
   });
 });
 
